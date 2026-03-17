@@ -3,1072 +3,2762 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>BCB · Leitor de Cédulas</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1E3B5A">
+<title>PCI Scanner</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-:root{
-  --bg:#F4F7FB;
-  --navy:#0D2137;
-  --navy2:#1E3B5A;
-  --gold:#C9A227;
-  --gold2:#F5C842;
-  --green:#0e6832;
-  --green2:#1a7c3e;
-  --red:#c11f2f;
-  --warn:#b45b0a;
-  --border:#DDE6EF;
-  --muted:#6B7A8F;
-  --card:#fff;
-  --mono:'JetBrains Mono',monospace;
-  --sans:'Inter',sans-serif;
+/* ═══════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{
+  font-family:'Inter',sans-serif;
+  background:#0D2137;
+  display:flex;
+  justify-content:center;
+  align-items:stretch;
 }
-*{font-family:var(--sans);}
-body{background:var(--bg);min-height:100vh;display:flex;justify-content:center;}
-.app{width:100%;max-width:480px;min-height:100vh;display:flex;flex-direction:column;background:var(--bg);box-shadow:0 0 60px rgba(0,0,0,.13);}
 
-/* ── HEADER ── */
-.hdr{background:linear-gradient(135deg,#0D2137 0%,#1a3554 60%,#0e4620 100%);padding:16px 18px 14px;display:flex;align-items:center;gap:13px;position:relative;overflow:hidden;flex-shrink:0;}
-.hdr::before{content:'';position:absolute;right:-20px;top:-20px;width:120px;height:120px;background:rgba(201,162,39,.08);border-radius:50%;}
-.hdr::after{content:'';position:absolute;right:20px;bottom:-30px;width:80px;height:80px;background:rgba(201,162,39,.06);border-radius:50%;}
-.hdr-icon{width:46px;height:46px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.35rem;color:var(--navy);flex-shrink:0;box-shadow:0 4px 14px rgba(201,162,39,.4);}
-.hdr-text h1{font-size:1.05rem;font-weight:800;color:#fff;letter-spacing:-.2px;}
-.hdr-text p{font-size:.68rem;color:rgba(255,255,255,.6);margin-top:1px;}
-.hdr-pill{margin-left:auto;background:rgba(201,162,39,.2);border:1px solid rgba(201,162,39,.5);color:var(--gold2);padding:4px 11px;border-radius:30px;font-size:.65rem;font-weight:700;display:flex;align-items:center;gap:5px;white-space:nowrap;z-index:1;}
+/* ═══════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════ */
+#app{
+  width:100%;
+  max-width:600px;
+  height:100%;
+  height:100dvh;
+  background:#F0F4F8;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  position:relative;
+}
 
-/* ── ALERT BAR ── */
-.alert-bar{background:linear-gradient(135deg,#fff8e1,#fff3cd);border-bottom:2px solid #f0c040;padding:10px 16px;display:flex;align-items:flex-start;gap:10px;flex-shrink:0;}
-.alert-bar i{color:#7a4500;font-size:.95rem;margin-top:1px;flex-shrink:0;}
-.alert-bar p{font-size:.72rem;color:#5a3000;line-height:1.55;font-weight:500;}
-.alert-bar strong{color:#3a1a00;}
+/* ═══════════════════════════════════════
+   HEADER
+═══════════════════════════════════════ */
+.topbar{
+  background:linear-gradient(135deg,#1E3B5A 0%,#0D2137 100%);
+  color:#fff;
+  padding:env(safe-area-inset-top,0) 0 0;
+  flex-shrink:0;
+  z-index:10;
+}
+.topbar-inner{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+}
+.topbar-logo{
+  width:38px;height:38px;
+  background:rgba(255,255,255,0.13);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.15rem;
+  flex-shrink:0;
+}
+.topbar-info{flex:1;min-width:0;}
+.topbar-info h1{font-size:1rem;font-weight:800;letter-spacing:-.3px;}
+.topbar-info p{font-size:.65rem;opacity:.7;margin-top:1px;}
+.topbar-status{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.08);
+  border-radius:20px;
+  padding:5px 10px;
+  font-size:.65rem;
+  font-weight:600;
+}
+.dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#f44336;
+  box-shadow:0 0 6px #f44336;
+  transition:all .4s;
+  flex-shrink:0;
+}
+.dot.on{background:#4CAF50;box-shadow:0 0 6px #4CAF50;}
 
-/* ── TABS ── */
-.tabs-wrap{padding:12px 14px 0;background:var(--bg);flex-shrink:0;}
-.tabs{display:flex;background:#fff;border-radius:40px;padding:4px;box-shadow:0 2px 10px rgba(0,0,0,.07);border:1px solid var(--border);}
-.tab{flex:1;text-align:center;padding:9px 3px;border-radius:40px;font-weight:600;font-size:.71rem;color:var(--muted);cursor:pointer;transition:.22s;white-space:nowrap;line-height:1.2;}
-.tab i{display:block;font-size:.95rem;margin-bottom:2px;}
-.tab.on{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;box-shadow:0 4px 12px rgba(13,33,55,.25);}
+/* ═══════════════════════════════════════
+   SCROLL AREA
+═══════════════════════════════════════ */
+.pages{
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  padding-bottom:calc(70px + env(safe-area-inset-bottom,0px));
+}
 
-/* ── CONTENT ── */
-.content{flex:1;overflow-y:auto;padding:14px 14px 20px;-webkit-overflow-scrolling:touch;}
-.pane{display:none;}
-.pane.on{display:block;}
+.page{display:none;}
+.page.active{display:block;}
 
-/* ── CARD ── */
-.card{background:var(--card);border-radius:20px;padding:16px;margin-bottom:14px;box-shadow:0 4px 16px rgba(0,20,60,.06);border:1px solid var(--border);}
-.card-hd{display:flex;align-items:center;gap:9px;margin-bottom:13px;font-size:.9rem;font-weight:700;color:#13293D;}
-.card-hd i{color:var(--navy2);}
-.card-hd .hd-badge{margin-left:auto;background:#E8F0FB;color:var(--navy2);padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:700;}
+/* ═══════════════════════════════════════
+   BOTTOM NAV
+═══════════════════════════════════════ */
+.bottomnav{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  height:calc(60px + env(safe-area-inset-bottom,0px));
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  background:#fff;
+  border-top:1px solid #E4EAF0;
+  display:flex;
+  align-items:stretch;
+  z-index:20;
+  box-shadow:0 -2px 20px rgba(0,0,0,0.07);
+}
+.nav-item{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  cursor:pointer;
+  transition:all .2s;
+  border:none;background:none;
+  padding:0 4px;
+  -webkit-tap-highlight-color:transparent;
+  position:relative;
+}
+.nav-item i{font-size:1.1rem;color:#9AABB8;transition:all .2s;}
+.nav-item span{font-size:.6rem;font-weight:600;color:#9AABB8;transition:all .2s;white-space:nowrap;}
+.nav-item.active i{color:#1E3B5A;}
+.nav-item.active span{color:#1E3B5A;}
+.nav-item.active::before{
+  content:'';
+  position:absolute;
+  top:0;left:20%;right:20%;
+  height:3px;
+  background:#1E3B5A;
+  border-radius:0 0 4px 4px;
+}
 
-/* ── SUBTABS (Câmera / Foto) ── */
-.stabs{display:flex;gap:8px;margin-bottom:14px;}
-.stab{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:14px;font-size:.8rem;font-weight:600;cursor:pointer;transition:.2s;border:2px solid var(--border);color:var(--muted);background:#fff;}
-.stab.on{background:var(--navy2);color:#fff;border-color:var(--navy2);box-shadow:0 4px 14px rgba(30,59,90,.25);}
-.stab i{font-size:1rem;}
+/* ═══════════════════════════════════════
+   PAGE PADDING
+═══════════════════════════════════════ */
+.p{padding:14px;}
+.p-sm{padding:10px 14px 0;}
 
-/* ── CÂMERA ── */
-.cam-wrap{width:100%;background:#0a0e14;border-radius:18px;overflow:hidden;position:relative;border:3px solid var(--navy2);margin-bottom:12px;}
-.cam-wide{aspect-ratio:16/9;} /* Cédulas são horizontais */
-.cam-square{aspect-ratio:1;}
-#bcb-reader{width:100%;height:100%;}
-#bcb-reader video{width:100%!important;height:100%!important;object-fit:cover!important;}
-.cam-idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:rgba(255,255,255,.35);}
-.cam-idle i{font-size:2.8rem;}
-.cam-idle p{font-size:.78rem;text-align:center;padding:0 24px;line-height:1.6;}
+/* ═══════════════════════════════════════
+   SECTION TITLE
+═══════════════════════════════════════ */
+.sec-title{
+  font-size:.7rem;font-weight:700;
+  color:#6B7A8F;
+  text-transform:uppercase;
+  letter-spacing:.8px;
+  margin:16px 0 8px;
+}
+.sec-title:first-child{margin-top:0;}
 
-/* Guia de enquadramento para cédula */
-.cam-guide{position:absolute;inset:0;pointer-events:none;}
-.guide-rect{position:absolute;top:12%;left:8%;right:8%;bottom:12%;border:2px dashed rgba(201,162,39,.6);border-radius:8px;}
-.guide-label{position:absolute;bottom:14%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);color:rgba(255,255,255,.85);padding:3px 12px;border-radius:20px;font-size:.65rem;font-weight:600;white-space:nowrap;}
-.scan-line-h{position:absolute;left:8%;right:8%;height:2px;background:linear-gradient(90deg,transparent,var(--gold2),transparent);animation:scanH 2.5s ease-in-out infinite;}
-@keyframes scanH{0%{top:12%;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:88%;opacity:0}}
-.cam-status{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;padding:4px 14px;border-radius:20px;font-size:.68rem;font-weight:600;white-space:nowrap;}
+/* ═══════════════════════════════════════
+   CARDS
+═══════════════════════════════════════ */
+.card{
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:12px;
+  box-shadow:0 2px 8px rgba(0,20,50,0.06);
+}
+.card-head{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:14px;
+}
+.card-head-icon{
+  width:36px;height:36px;
+  border-radius:10px;
+  background:#EEF3FA;
+  display:flex;align-items:center;justify-content:center;
+  color:#1E3B5A;font-size:1rem;
+  flex-shrink:0;
+}
+.card-head-text h3{font-size:.9rem;font-weight:700;color:#13293D;}
+.card-head-text p{font-size:.68rem;color:#6B7A8F;margin-top:1px;}
 
-/* ── UPLOAD / FOTO ── */
-.upload-zone{border:2.5px dashed var(--border);border-radius:18px;padding:28px 20px;text-align:center;cursor:pointer;transition:.2s;background:#FAFCFF;position:relative;margin-bottom:12px;}
-.upload-zone:hover,.upload-zone.drag{border-color:var(--navy2);background:#F0F5FF;}
-.upload-zone i{font-size:2.4rem;color:var(--navy2);opacity:.4;display:block;margin-bottom:10px;}
-.upload-zone p{font-size:.8rem;color:var(--muted);line-height:1.6;}
-.upload-zone strong{color:var(--navy2);}
-.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.img-preview-wrap{position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--border);margin-bottom:12px;background:#000;}
-.img-preview-wrap img{width:100%;display:block;}
-.img-preview-wrap canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
-.img-clear-btn{position:absolute;top:10px;right:10px;background:rgba(193,31,47,.85);color:#fff;border:none;width:30px;height:30px;border-radius:50%;font-size:.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+/* ═══════════════════════════════════════
+   SCANNER BOX
+═══════════════════════════════════════ */
+.scan-wrap{
+  position:relative;
+  width:100%;
+  border-radius:14px;
+  overflow:hidden;
+  background:#0a0a0a;
+  margin-bottom:12px;
+}
+.scan-wrap.sq{aspect-ratio:1/1;}
+.scan-wrap.rect{aspect-ratio:4/3;}
+.scan-wrap > div[id^="qr"]{width:100%;height:100%;}
+.scan-wrap video{width:100%!important;height:100%!important;object-fit:cover!important;display:block;}
+/* Hide lib UI */
+#qr-reader__scan_region img,#qr-reader-etiqueta__scan_region img{display:none!important;}
+#qr-reader__dashboard,#qr-reader-etiqueta__dashboard{display:none!important;}
 
-/* ── BOTÕES ── */
-.btn{border:none;padding:12px;border-radius:40px;font-size:.87rem;font-weight:600;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:.2s;margin-bottom:10px;}
-.btn:active{transform:scale(.97);}
-.btn:last-child{margin-bottom:0;}
-.btn-navy{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;box-shadow:0 4px 14px rgba(13,33,55,.22);}
-.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);box-shadow:0 4px 14px rgba(201,162,39,.3);font-weight:700;}
-.btn-green{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;box-shadow:0 4px 14px rgba(14,104,50,.2);}
-.btn-outline{background:#fff;color:var(--navy2);border:1.5px solid var(--border);}
-.btn-danger{background:rgba(193,31,47,.1);color:var(--red);border:1.5px solid rgba(193,31,47,.25);}
+.scan-overlay{
+  position:absolute;inset:0;pointer-events:none;
+}
+/* Corner guides */
+.scan-corner{
+  position:absolute;width:24px;height:24px;
+  border-color:#4CAF50;border-style:solid;
+}
+.sc-tl{top:14px;left:14px;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
+.sc-tr{top:14px;right:14px;border-width:3px 3px 0 0;border-radius:0 4px 0 0;}
+.sc-bl{bottom:14px;left:14px;border-width:0 0 3px 3px;border-radius:0 0 0 4px;}
+.sc-br{bottom:14px;right:14px;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
+.scan-line{
+  position:absolute;left:14px;right:14px;height:2px;
+  background:linear-gradient(90deg,transparent,#4CAF50,transparent);
+  animation:scanline 2s ease-in-out infinite;
+}
+@keyframes scanline{0%{top:14px}50%{top:calc(100% - 14px)}100%{top:14px}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.scan-status{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(transparent,rgba(0,0,0,.6));
+  color:#fff;text-align:center;
+  padding:20px 12px 12px;
+  font-size:.72rem;font-weight:600;
+}
+
+/* ═══════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════ */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:13px 16px;
+  border:none;border-radius:30px;
+  font-size:.88rem;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  font-family:'Inter',sans-serif;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:active{transform:scale(.97);opacity:.9;}
+.btn+.btn{margin-top:8px;}
+.btn-primary{background:linear-gradient(135deg,#1E3B5A,#0D2137);color:#fff;}
+.btn-secondary{background:#fff;color:#1E3B5A;border:1.5px solid #C5D5E8;}
+.btn-success{background:linear-gradient(135deg,#1a7c3e,#145e30);color:#fff;}
+.btn-warning{background:#FFF3CD;color:#7a5c00;border:1.5px solid #f0d060;}
+.btn-danger{background:#FFF0F0;color:#c62828;border:1.5px solid #ffb3b3;}
 .btn-row{display:flex;gap:8px;}
-.btn-row .btn{flex:1;margin:0;}
-.btn-sm{padding:8px 14px;font-size:.75rem;width:auto;margin:0;}
+.btn-row .btn{flex:1;}
+.btn-row .btn+.btn{margin-top:0;}
+.btn-sm{padding:9px 14px;font-size:.78rem;width:auto;}
+.btn-icon{
+  width:40px;height:40px;
+  border-radius:12px;
+  border:none;background:#EEF3FA;color:#1E3B5A;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.95rem;cursor:pointer;flex-shrink:0;
+  transition:.2s;
+}
+.btn-icon:active{transform:scale(.92);}
 
-/* ── RESULTADO ── */
-.res-card{border-radius:18px;padding:14px;margin-bottom:12px;border:2px solid;}
-.res-card.success{background:#DFF0E4;border-color:#A8D5B5;}
-.res-card.info{background:#E8F0FB;border-color:#C5D8F5;}
-.res-card.warn{background:#FFF3CD;border-color:#f0c040;}
-.res-card.neutral{background:#F8FAFD;border-color:var(--border);}
-.res-lbl{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:5px;}
-.res-val{font-family:var(--mono);font-size:.9rem;font-weight:700;color:#0D2137;word-break:break-all;line-height:1.6;}
-.res-val.big{font-size:1.05rem;letter-spacing:.5px;}
-.res-val.green{color:var(--green);}
-.res-val.gold{color:#8a6a00;}
+/* ═══════════════════════════════════════
+   FORM ELEMENTS
+═══════════════════════════════════════ */
+.field{margin-bottom:12px;}
+.label{
+  display:block;font-size:.72rem;font-weight:600;
+  color:#6B7A8F;margin-bottom:5px;
+}
+.label .req{color:#e53935;}
+.input{
+  width:100%;padding:12px 14px;
+  border-radius:12px;
+  border:1.5px solid #E0E8F0;
+  font-size:.88rem;font-family:'Inter',sans-serif;
+  background:#fff;color:#13293D;
+  transition:.2s;
+  -webkit-appearance:none;
+}
+.input:focus{outline:none;border-color:#1E3B5A;box-shadow:0 0 0 3px rgba(30,59,90,.08);}
+.input:disabled,.input[readonly]{background:#F5F7FA;color:#9AABB8;}
+.input-mono{font-family:monospace;letter-spacing:.5px;}
+textarea.input{resize:none;border-radius:12px;}
+select.input{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7A8F' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 14px center;
+  padding-right:36px;
+}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 
-/* Formato badge */
-.fmt-tag{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:30px;font-size:.68rem;font-weight:700;margin-bottom:10px;}
-.ft-dm{background:#EDE9FE;color:#5b21b6;border:1px solid #c4b5fd;}
-.ft-c128{background:#FEF3C7;color:#92400e;border:1px solid #fcd34d;}
-.ft-c39{background:#FFF7ED;color:#c2410c;border:1px solid #fdba74;}
-.ft-aztec{background:#ECFDF5;color:#065f46;border:1px solid #6ee7b7;}
-.ft-pdf{background:#EFF6FF;color:#1d4ed8;border:1px solid #93c5fd;}
-.ft-ean{background:#F0FDF4;color:#166534;border:1px solid #86efac;}
-.ft-other{background:#F8FAFC;color:var(--muted);border:1px solid var(--border);}
+/* Dropdown search */
+.drop-wrap{position:relative;}
+.drop-input-wrap{position:relative;}
+.drop-prefix{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  color:#9AABB8;font-size:.9rem;pointer-events:none;
+}
+.drop-input-wrap .input{padding-left:36px;}
+.drop-clear{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  color:#9AABB8;font-size:.8rem;cursor:pointer;display:none;
+}
+.drop-list{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:#fff;border-radius:14px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.14);
+  border:1.5px solid #E0E8F0;
+  max-height:200px;overflow-y:auto;
+  display:none;z-index:100;
+}
+.drop-list.open{display:block;}
+.drop-opt{
+  padding:10px 14px;font-size:.84rem;
+  cursor:pointer;border-bottom:1px solid #F4F7FA;
+  transition:.12s;
+}
+.drop-opt:last-child{border-bottom:none;}
+.drop-opt:hover,.drop-opt:active{background:#F0F5FF;}
+.drop-opt-main{font-weight:600;color:#13293D;}
+.drop-opt-sub{font-size:.7rem;color:#6B7A8F;margin-top:1px;}
+.drop-empty{padding:16px;text-align:center;color:#9AABB8;font-size:.82rem;}
 
-/* Grid analítica */
-.ag{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
-.ag-cell{background:#F8FAFD;border-radius:12px;padding:10px;border:1px solid var(--border);}
-.ag-lbl{font-size:.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
-.ag-val{font-size:.84rem;font-weight:700;color:#0D2137;font-family:var(--mono);}
-.ag-val.green{color:var(--green);}
-.ag-val.gold{color:#8a6a00;}
-.ag-val.info{color:var(--navy2);}
-.ag.span2{grid-column:span 2;}
-.ag-cell.hilite{background:#DFF0E4;border-color:#A8D5B5;}
-.ag-cell.hilite .ag-val{color:#0e4d24;}
-.ag-cell.s2{grid-column:span 2;}
+/* Selected chip */
+.chip{
+  display:flex;align-items:center;gap:10px;
+  background:#EEF5FF;border-radius:12px;
+  padding:10px 12px;margin-top:6px;
+  border:1.5px solid #C8DCEF;
+}
+.chip-icon{
+  width:30px;height:30px;border-radius:8px;
+  background:#1E3B5A;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.8rem;flex-shrink:0;
+}
+.chip-info{flex:1;min-width:0;}
+.chip-name{font-weight:700;font-size:.84rem;color:#13293D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chip-sub{font-size:.68rem;color:#6B7A8F;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chip-rm{
+  width:24px;height:24px;border-radius:6px;
+  background:rgba(0,0,0,.06);border:none;
+  color:#6B7A8F;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;flex-shrink:0;
+}
 
-/* Cédula info */
-.cedula-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:30px;font-size:.78rem;font-weight:700;margin-bottom:10px;}
-.cb-green{background:#DFF0E4;color:#0e4d24;border:1.5px solid #A8D5B5;}
-.cb-blue{background:#E8F0FB;color:#1a3b5d;border:1.5px solid #C5D8F5;}
-.cb-gold{background:#FEF3C7;color:#7a4500;border:1.5px solid #fcd34d;}
-.cb-red{background:#FFE5E5;color:#7a0a0a;border:1.5px solid #fca5a5;}
+/* Ext detail mini card */
+.ext-detail{
+  background:#F8FAFD;border-radius:12px;
+  padding:10px 12px;margin-top:8px;
+  border:1px solid #E4EAF0;
+  display:grid;grid-template-columns:1fr 1fr;gap:2px;
+}
+.ext-detail-row{
+  display:flex;justify-content:space-between;
+  padding:4px 0;font-size:.78rem;
+  border-bottom:1px dashed #E4EAF0;
+  grid-column:span 2;
+}
+.ext-detail-row:last-child{border-bottom:none;}
+.edl{color:#6B7A8F;}
+.edv{font-weight:600;color:#13293D;}
 
-/* ── MANUAL ── */
-.ta{width:100%;padding:12px 14px;border-radius:16px;border:1.5px solid var(--border);font-size:.83rem;background:#fff;color:#0D2137;resize:none;height:80px;transition:.2s;font-family:var(--mono);}
-.ta:focus{outline:none;border-color:var(--navy2);}
+/* ═══════════════════════════════════════
+   INFO STRIPS (scanner result)
+═══════════════════════════════════════ */
+.info-strip{
+  background:#F4F7FB;border-radius:12px;
+  padding:10px 12px;margin:10px 0;
+}
+.info-row{
+  display:flex;align-items:center;gap:10px;
+  padding:7px 0;
+  border-bottom:1px solid rgba(0,0,0,0.05);
+}
+.info-row:last-child{border-bottom:none;}
+.info-ico{
+  width:30px;height:30px;
+  background:#1E3B5A;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:.78rem;flex-shrink:0;
+}
+.info-lbl{font-size:.67rem;color:#6B7A8F;line-height:1;}
+.info-val{font-size:.86rem;font-weight:700;color:#13293D;margin-top:2px;}
 
-/* ── LOG ── */
-.log-row{padding:11px 0;border-bottom:1px solid var(--border);}
-.log-row:last-child{border-bottom:none;}
-.log-ts{font-size:.62rem;color:var(--muted);font-family:var(--mono);}
-.log-raw{font-family:var(--mono);font-size:.74rem;color:var(--navy2);word-break:break-all;margin:4px 0;line-height:1.55;}
-.log-meta{font-size:.68rem;color:var(--muted);}
-.log-highlight{font-size:.72rem;color:var(--green);font-weight:600;margin-top:2px;}
-.btn-copy{background:none;border:1px solid var(--border);color:var(--muted);padding:3px 9px;border-radius:20px;font-size:.64rem;cursor:pointer;transition:.2s;}
-.btn-copy:hover{border-color:var(--navy2);color:var(--navy2);}
+.result-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:8px;margin:10px 0;
+}
+.rg-cell{
+  background:#F4F7FB;border-radius:12px;
+  padding:10px 12px;
+}
+.rg-cell.full{grid-column:span 2;}
+.rg-lbl{font-size:.65rem;color:#6B7A8F;font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
+.rg-val{font-size:.88rem;font-weight:700;color:#13293D;margin-top:3px;word-break:break-all;}
 
-/* ── SOBRE ── */
-.info-blk{border-radius:14px;padding:13px;margin-bottom:10px;font-size:.79rem;line-height:1.75;}
-.info-blk.blue{background:#E8F0FB;border:1px solid #C5D8F5;color:#1a3b5d;}
-.info-blk.yellow{background:#FFF3CD;border:1px solid #f0c040;color:#5a3000;}
-.info-blk.green{background:#DFF0E4;border:1px solid #A8D5B5;color:#0e4d24;}
-.info-blk.gold{background:#FEF3C7;border:1px solid #fcd34d;color:#7a4500;}
-.info-blk ul{padding-left:18px;margin-top:6px;}
-.info-blk li{margin-bottom:3px;}
-.info-blk code{background:rgba(0,0,0,.08);padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:.78rem;}
+/* ═══════════════════════════════════════
+   INMETRO TIP BOX
+═══════════════════════════════════════ */
 
-/* Processing overlay */
-.processing{position:absolute;inset:0;background:rgba(0,0,0,.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:14px;z-index:10;}
-.processing p{color:#fff;font-size:.82rem;font-weight:600;}
-.spin{width:36px;height:36px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--gold2);border-radius:50%;animation:spi 1s linear infinite;}
-@keyframes spi{to{transform:rotate(360deg)}}
 
-/* ── MISC ── */
-.sep{height:1px;background:var(--border);margin:12px 0;}
-.empty{text-align:center;padding:32px 16px;color:var(--muted);}
-.empty i{font-size:2.3rem;display:block;margin-bottom:10px;opacity:.2;}
-.empty p{font-size:.82rem;line-height:1.6;}
-.notif{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:#fff;border-radius:30px;padding:9px 18px;box-shadow:0 6px 24px rgba(0,0,0,.16);z-index:9999;display:flex;align-items:center;gap:8px;animation:ni .3s ease;font-size:.84rem;white-space:nowrap;border:1px solid var(--border);}
-@keyframes ni{from{top:-60px;opacity:0}to{top:14px;opacity:1}}
-footer{padding:9px;text-align:center;font-size:.64rem;color:var(--muted);border-top:1px solid var(--border);background:#fff;flex-shrink:0;}
+/* ═══════════════════════════════════════
+   UUID PASTE AREA
+═══════════════════════════════════════ */
+.paste-area{
+  background:#EEF5FF;border-radius:14px;
+  padding:14px;margin-bottom:12px;
+  border:2px dashed #B8D0EE;
+}
+.paste-area .label{color:#3d6b99;margin-bottom:8px;}
+.uuid-result{
+  margin-top:8px;padding:10px 12px;
+  border-radius:10px;font-size:.8rem;font-weight:600;
+  word-break:break-all;display:none;
+}
+.uuid-result.ok{background:#DFF0E4;color:#0E6832;display:block;}
+.uuid-result.err{background:#FFE5E5;color:#C62828;display:block;}
+
+/* ═══════════════════════════════════════
+   MANUAL CODE
+═══════════════════════════════════════ */
+.manual-wrap{
+  background:#F8FAFD;border-radius:14px;
+  padding:14px;margin-bottom:12px;
+  border:1px solid #E4EAF0;
+}
+.manual-wrap .label{margin-bottom:6px;}
+.manual-row{display:flex;gap:8px;align-items:center;}
+.manual-row .input{flex:1;margin-bottom:0;}
+
+/* ═══════════════════════════════════════
+   LIST ITEMS (etiquetas / historico)
+═══════════════════════════════════════ */
+.list-item{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px;margin-bottom:8px;
+  background:#fff;border-radius:14px;
+  border:1px solid #E8EFF5;
+  cursor:pointer;transition:.15s;
+}
+.list-item:active{background:#F0F5FF;}
+.list-icon{
+  width:38px;height:38px;border-radius:10px;
+  background:#EEF3FA;color:#1E3B5A;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.95rem;flex-shrink:0;
+}
+.list-body{flex:1;min-width:0;}
+.list-title{font-size:.86rem;font-weight:700;color:#13293D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.list-sub{font-size:.72rem;color:#6B7A8F;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.list-id{font-size:.65rem;color:#9AABB8;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.list-meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
+.badge{
+  background:#EEF3FA;color:#1E3B5A;
+  border-radius:20px;padding:3px 8px;
+  font-size:.62rem;font-weight:700;
+  white-space:nowrap;
+}
+.badge-ok{background:#DFF0E4;color:#0E6832;}
+.badge-warn{background:#FFF3CD;color:#856404;}
+.del-btn{
+  width:26px;height:26px;border-radius:8px;
+  background:#FFF0F0;border:none;
+  color:#e53935;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;
+}
+
+/* ═══════════════════════════════════════
+   HIST ITEM
+═══════════════════════════════════════ */
+.hist-item{
+  background:#fff;border-radius:14px;
+  padding:12px;margin-bottom:8px;
+  border-left:3px solid #1E3B5A;
+  border-top:1px solid #E8EFF5;
+  border-right:1px solid #E8EFF5;
+  border-bottom:1px solid #E8EFF5;
+  position:relative;
+}
+.hist-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;}
+.hist-id{font-size:.68rem;color:#6B7A8F;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hist-date{font-size:.62rem;color:#9AABB8;white-space:nowrap;flex-shrink:0;}
+.hist-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.hist-cell{background:#F4F7FB;border-radius:8px;padding:7px 8px;}
+.hist-cell.full{grid-column:span 2;}
+.hc-lbl{font-size:.6rem;color:#6B7A8F;font-weight:600;text-transform:uppercase;}
+.hc-val{font-size:.78rem;font-weight:700;color:#13293D;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-del{
+  position:absolute;top:10px;right:10px;
+  width:26px;height:26px;border-radius:7px;
+  background:#FFF0F0;border:none;color:#e53935;
+  cursor:pointer;font-size:.72rem;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ═══════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════ */
+.cfg-block{
+  background:#fff;border-radius:16px;
+  padding:16px;margin-bottom:12px;
+}
+.cfg-head{
+  display:flex;align-items:center;gap:9px;
+  font-size:.85rem;font-weight:700;color:#1E3B5A;
+  margin-bottom:14px;
+}
+.cfg-head i{font-size:1rem;}
+.cfg-actions{display:flex;gap:8px;margin-top:12px;}
+.cfg-actions .btn{flex:1;margin-top:0;}
+
+/* ═══════════════════════════════════════
+   CANVAS PREVIEW
+═══════════════════════════════════════ */
+.canvas-wrap{
+  display:flex;justify-content:center;
+  background:#F4F7FB;border-radius:12px;
+  padding:14px;margin-bottom:10px;
+}
+.canvas-wrap canvas{
+  border-radius:4px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.12);
+  max-width:100%;height:auto;
+}
+
+/* ═══════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════ */
+.empty{
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:40px 20px;
+  color:#9AABB8;text-align:center;
+}
+.empty i{font-size:2.4rem;margin-bottom:10px;opacity:.3;}
+.empty p{font-size:.84rem;}
+
+/* ═══════════════════════════════════════
+   TOAST NOTIFICATION
+═══════════════════════════════════════ */
+.toast{
+  position:fixed;
+  top:calc(env(safe-area-inset-top,0px) + 60px);
+  left:50%;transform:translateX(-50%) translateY(-10px);
+  background:#fff;
+  border-radius:30px;
+  padding:10px 18px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.15);
+  display:flex;align-items:center;gap:8px;
+  font-size:.84rem;font-weight:600;
+  z-index:9999;
+  white-space:nowrap;
+  opacity:0;
+  transition:all .25s ease;
+  pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast i{font-size:.9rem;}
+.toast.success{color:#0E6832;}
+.toast.error{color:#c62828;}
+.toast.warning{color:#7a5c00;}
+.toast.info{color:#1E3B5A;}
+
+/* ═══════════════════════════════════════
+   MODALS
+═══════════════════════════════════════ */
+.modal-bg{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  display:flex;align-items:flex-end;
+  justify-content:center;
+  z-index:1000;
+  padding:0;
+}
+@media(min-height:600px){
+  .modal-bg{align-items:center;padding:20px;}
+}
+.modal{
+  background:#fff;
+  border-radius:22px 22px 0 0;
+  padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));
+  width:100%;max-width:500px;
+  max-height:85dvh;overflow-y:auto;
+}
+@media(min-height:600px){
+  .modal{border-radius:22px;padding:22px;max-height:80dvh;}
+}
+.modal-handle{
+  width:36px;height:4px;
+  background:#E0E8F0;border-radius:2px;
+  margin:0 auto 16px;
+}
+.modal-title{
+  font-size:1rem;font-weight:800;color:#13293D;
+  margin-bottom:14px;
+  display:flex;align-items:center;gap:9px;
+}
+.modal-btns{display:flex;gap:8px;margin-top:16px;}
+.modal-btns .btn{flex:1;margin-top:0;}
+
+.qr-raw{
+  background:#F4F7FB;border-radius:12px;
+  padding:12px 14px;
+  font-size:.8rem;color:#13293D;
+  line-height:1.6;word-break:break-all;
+  max-height:90px;overflow-y:auto;
+  margin-bottom:12px;border:1px solid #E4EAF0;
+}
+.uuid-box{
+  border-radius:12px;padding:12px 14px;
+  font-size:.84rem;font-weight:700;
+  word-break:break-all;
+  display:flex;align-items:flex-start;gap:8px;
+}
+.uuid-box.ok{background:#DFF0E4;color:#0E6832;border:1px solid #A8D5B5;}
+.uuid-box.warn{background:#FFF3CD;color:#856404;border:1px solid #F0D060;}
+.mini-label{
+  font-size:.68rem;font-weight:700;color:#6B7A8F;
+  text-transform:uppercase;letter-spacing:.5px;
+  margin-bottom:6px;
+}
+
+/* ═══════════════════════════════════════
+   SUBTABS
+═══════════════════════════════════════ */
+.subtabs{
+  display:flex;gap:6px;
+  padding:10px 14px 0;
+  background:#F0F4F8;
+  position:sticky;top:0;z-index:5;
+}
+.stab{
+  flex:1;text-align:center;
+  padding:9px 6px;
+  border-radius:10px 10px 0 0;
+  font-size:.74rem;font-weight:700;
+  color:#6B7A8F;cursor:pointer;
+  transition:.2s;
+  background:transparent;
+  border:none;
+}
+.stab.active{
+  background:#fff;color:#1E3B5A;
+  box-shadow:0 -2px 8px rgba(0,0,0,0.05);
+}
+.subpane{display:none;}
+.subpane.active{display:block;}
+
+/* ═══════════════════════════════════════
+   SEPARATOR
+═══════════════════════════════════════ */
+.sep{height:1px;background:#E8EFF5;margin:12px 0;}
+
+/* ═══════════════════════════════════════
+   TABLET ADAPTATION (>= 600px)
+═══════════════════════════════════════ */
+@media(min-width:600px){
+  #app{border-radius:0;box-shadow:none;}
+  .pages{padding-bottom:calc(72px + env(safe-area-inset-bottom,0px));}
+  .bottomnav{height:calc(64px + env(safe-area-inset-bottom,0px));}
+  .nav-item i{font-size:1.2rem;}
+  .nav-item span{font-size:.65rem;}
+  .result-grid{grid-template-columns:1fr 1fr 1fr;}
+  .field-row{grid-template-columns:1fr 1fr 1fr;}
+  .card{padding:20px;}
+  .p{padding:16px;}
+}
+
+/* Scroll customization */
+.pages::-webkit-scrollbar{width:3px;}
+.pages::-webkit-scrollbar-track{background:transparent;}
+.pages::-webkit-scrollbar-thumb{background:#C5D5E8;border-radius:3px;}
+
 .hidden{display:none!important;}
 </style>
 </head>
 <body>
-<div class="app">
+<div id="app">
 
-  <!-- HEADER -->
-  <div class="hdr">
-    <div class="hdr-icon"><i class="fas fa-money-bill-wave"></i></div>
-    <div class="hdr-text">
-      <h1>BCB · Leitor de Cédulas</h1>
-      <p>Banco Central do Brasil — Diagnóstico de Código</p>
-    </div>
-    <div class="hdr-pill"><i class="fas fa-flask"></i> PROTÓTIPO</div>
-  </div>
-
-  <!-- AVISO -->
-  <div class="alert-bar">
-    <i class="fas fa-info-circle"></i>
-    <p>
-      <strong>Modo diagnóstico:</strong> captura e registra <strong>todos</strong> os códigos encontrados na cédula — série, número, Data Matrix, barcodes e QR Code (se houver).
-      Identifique quais campos são únicos e úteis para integração.
-    </p>
-  </div>
-
-  <!-- TABS -->
-  <div class="tabs-wrap">
-    <div class="tabs">
-      <div class="tab on" id="tLeitor" onclick="goTab('Leitor')"><i class="fas fa-camera"></i>Leitor</div>
-      <div class="tab" id="tManual"  onclick="goTab('Manual')"><i class="fas fa-keyboard"></i>Manual</div>
-      <div class="tab" id="tLog"     onclick="goTab('Log')"><i class="fas fa-list"></i>Log<br><span id="logBadge" style="background:var(--navy2);color:#fff;border-radius:20px;padding:0 6px;font-size:.6rem;">0</span></div>
-      <div class="tab" id="tSobre"   onclick="goTab('Sobre')"><i class="fas fa-book"></i>Sobre</div>
-    </div>
-  </div>
-
-  <div class="content">
-
-    <!-- ═══════ LEITOR ═══════ -->
-    <div class="pane on" id="pLeitor">
-
-      <!-- Sub-tabs: Câmera ao vivo / Foto ou Upload -->
-      <div class="stabs" style="margin-top:4px;">
-        <div class="stab on" id="stCamera" onclick="goStab('Camera')">
-          <i class="fas fa-video"></i> Câmera ao Vivo
-        </div>
-        <div class="stab" id="stFoto" onclick="goStab('Foto')">
-          <i class="fas fa-image"></i> Foto / Upload
-        </div>
+  <!-- ─── TOPBAR ─── -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-logo"><i class="fas fa-fire-extinguisher"></i></div>
+      <div class="topbar-info">
+        <h1>PCI Scanner</h1>
+        <p>Sistema de Extintores</p>
       </div>
+      <div class="topbar-status">
+        <div class="dot" id="connDot"></div>
+        <span id="connLabel">Offline</span>
+      </div>
+    </div>
+  </div>
 
-      <!-- ── Câmera ao vivo ── -->
-      <div id="spCamera">
-        <div class="card">
-          <div class="card-hd">
-            <i class="fas fa-video"></i> Scanner ao Vivo
-            <span class="hd-badge" id="camBadge">Parado</span>
-          </div>
+  <!-- ─── PAGES ─── -->
+  <div class="pages" id="pages">
 
-          <div class="cam-wrap cam-wide" id="camWrap">
-            <!-- Idle state -->
-            <div class="cam-idle" id="camIdle">
-              <i class="fas fa-money-bill-wave"></i>
-              <p>Aponte a câmera para a <strong>frente ou verso</strong> da cédula<br>enquadrando no guia</p>
+    <!-- ══ SCANNER ══ -->
+    <div class="page active" id="pageScanner">
+      <div class="p">
+
+        <!-- IA Capture Card -->
+        <div class="card" style="padding:12px;">
+          <div class="card-head" style="margin-bottom:10px;">
+            <div class="card-head-icon" style="background:#E8F0FB;"><i class="fas fa-brain" style="color:#1E3B5A;"></i></div>
+            <div class="card-head-text">
+              <h3>Captura com IA</h3>
+              <p>Aponte para o selo INMETRO e capture</p>
             </div>
-            <!-- Reader container -->
-            <div id="bcb-reader" style="display:none;width:100%;height:100%;"></div>
-            <!-- Overlay -->
-            <div class="cam-guide" id="camGuide" style="display:none;">
-              <div class="guide-rect"></div>
-              <div class="guide-label">Enquadre a cédula aqui</div>
-              <div class="scan-line-h"></div>
+          </div>
+
+          <!-- Viewfinder -->
+          <div style="position:relative;width:100%;aspect-ratio:1/1;border-radius:14px;overflow:hidden;background:#0a0a0a;margin-bottom:12px;" id="camWrap">
+            <video id="camVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:block;"></video>
+            <div style="position:absolute;inset:0;pointer-events:none;">
+              <div class="scan-corner sc-tl"></div><div class="scan-corner sc-tr"></div>
+              <div class="scan-corner sc-bl"></div><div class="scan-corner sc-br"></div>
+              <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:55%;aspect-ratio:1;border:2px dashed rgba(255,255,255,0.35);border-radius:8px;"></div>
             </div>
-            <div class="cam-status" id="camStatus" style="display:none;">Escaneando...</div>
+            <div id="camStatus" style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.72));color:#fff;text-align:center;padding:24px 12px 10px;font-size:.74rem;font-weight:600;">Pressione <strong>Iniciar</strong></div>
+            <canvas id="captureCanvas" style="display:none;position:absolute;inset:0;width:100%;height:100%;border-radius:14px;"></canvas>
           </div>
 
-          <div class="btn-row">
-            <button class="btn btn-navy" id="btnStart" onclick="startScanner()">
-              <i class="fas fa-play"></i> Iniciar Scanner
-            </button>
-            <button class="btn btn-outline" id="btnStop" style="display:none;" onclick="stopScanner()">
-              <i class="fas fa-stop"></i> Parar
-            </button>
-            <button class="btn btn-outline" id="btnFlash" style="width:48px;flex:0 0 48px;padding:0;margin:0;" onclick="toggleFlash()" title="Lanterna">
-              <i class="fas fa-bolt"></i>
-            </button>
+          <!-- Controles câmera -->
+          <div class="btn-row" style="margin-bottom:8px;">
+            <button class="btn btn-primary" id="btnCamStart" onclick="startCam()"><i class="fas fa-play"></i> Iniciar Câmera</button>
+            <button class="btn btn-secondary hidden" id="btnCamStop" onclick="stopCam()"><i class="fas fa-stop"></i> Parar</button>
+            <button class="btn-icon" id="btnFlash" onclick="toggleFlash()" title="Lanterna"><i class="fas fa-bolt"></i></button>
           </div>
 
-          <!-- Formatos -->
-          <div class="sep"></div>
-          <div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px;">
-            Formatos ativos (todos incluídos para cédulas)
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;" id="fmtList">
-            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #1E3B5A;background:#E8F0FB;color:#1E3B5A;cursor:pointer;">
-              <input type="checkbox" checked value="QR_CODE" onchange="toggleFmt(this)"> QR Code
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #5b21b6;background:#EDE9FE;color:#5b21b6;cursor:pointer;">
-              <input type="checkbox" checked value="DATA_MATRIX" onchange="toggleFmt(this)"> Data Matrix
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #92400e;background:#FEF3C7;color:#92400e;cursor:pointer;">
-              <input type="checkbox" checked value="CODE_128" onchange="toggleFmt(this)"> Code 128
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #c2410c;background:#FFF7ED;color:#c2410c;cursor:pointer;">
-              <input type="checkbox" checked value="CODE_39" onchange="toggleFmt(this)"> Code 39
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #065f46;background:#ECFDF5;color:#065f46;cursor:pointer;">
-              <input type="checkbox" checked value="AZTEC" onchange="toggleFmt(this)"> Aztec
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #1d4ed8;background:#EFF6FF;color:#1d4ed8;cursor:pointer;">
-              <input type="checkbox" checked value="PDF_417" onchange="toggleFmt(this)"> PDF 417
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #166534;background:#F0FDF4;color:#166534;cursor:pointer;">
-              <input type="checkbox" checked value="EAN_13" onchange="toggleFmt(this)"> EAN-13
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #166534;background:#F0FDF4;color:#166534;cursor:pointer;">
-              <input type="checkbox" checked value="ITF" onchange="toggleFmt(this)"> ITF
-            </label>
+          <!-- Botão capturar IA -->
+          <button class="btn btn-success hidden" id="btnCapture" onclick="capturarIA()">
+            <i class="fas fa-brain"></i> Capturar e Extrair ID com IA
+          </button>
+
+          <!-- Status IA -->
+          <div id="iaStatus" class="hidden" style="align-items:center;gap:10px;background:#EEF3FA;border-radius:12px;padding:12px 14px;margin-top:8px;">
+            <div id="iaSpinner" style="width:22px;height:22px;border:2px solid #C5D5E8;border-top-color:#1E3B5A;border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0;"></div>
+            <div>
+              <div style="font-size:.78rem;font-weight:700;color:#1E3B5A;" id="iaStatusTxt">Analisando com IA...</div>
+              <div style="font-size:.68rem;color:#6B7A8F;margin-top:1px;" id="iaStatusSub">Groq Vision (llama-3.2) analisa o selo</div>
+            </div>
           </div>
         </div>
 
-        <!-- Resultado ao vivo -->
-        <div id="resVivo" style="display:none;">
+        <!-- Entrada Manual -->
+        <div class="manual-wrap">
+          <div class="label"><i class="fas fa-keyboard" style="color:#1E3B5A;"></i> Entrada Manual</div>
+          <p style="font-size:.72rem;color:#6B7A8F;margin-bottom:8px;">Cole a mensagem do WhatsApp, URL INMETRO ou código do selo</p>
+          <div class="manual-row">
+            <input type="text" class="input input-mono" id="manualCode"
+              placeholder="Cole aqui... (UUID, URL ou código)"
+              oninput="this.value=this.value.trim()"
+              onkeydown="if(event.key==='Enter')submitManual()">
+            <button class="btn btn-primary btn-sm" onclick="submitManual()"><i class="fas fa-search"></i></button>
+          </div>
+        </div>
+
+        <!-- Resultado -->
+        <div id="resultCard" class="hidden">
           <div class="card">
-            <div class="card-hd">
-              <i class="fas fa-check-circle" style="color:var(--green2);"></i> Código Detectado
-              <button class="btn-copy" style="margin-left:auto;" onclick="copiarUltimo()"><i class="fas fa-copy"></i> Copiar</button>
+            <div class="card-head">
+              <div class="card-head-icon" style="background:#DFF0E4;color:#0E6832;"><i class="fas fa-check-circle"></i></div>
+              <div class="card-head-text">
+                <h3>Selo Identificado</h3>
+                <p id="rIdDisp" style="font-family:monospace;font-size:.68rem;color:#1E3B5A;word-break:break-all;margin-top:2px;"></p>
+              </div>
             </div>
-            <div id="resVivoContent"></div>
+            <div id="rMetodo" style="display:inline-flex;align-items:center;gap:6px;background:#F4F7FB;border-radius:8px;padding:5px 10px;font-size:.7rem;font-weight:600;color:#4A5B6E;margin-bottom:10px;">
+              <i id="rMetodoIco" class="fas fa-brain"></i><span id="rMetodoTxt">IA Vision</span>
+            </div>
+            <div class="info-strip">
+              <div class="info-row">
+                <div class="info-ico"><i class="fas fa-fire-extinguisher"></i></div>
+                <div><div class="info-lbl">Extintor</div><div class="info-val" id="rExt">—</div></div>
+              </div>
+              <div class="info-row">
+                <div class="info-ico"><i class="fas fa-user-tie"></i></div>
+                <div><div class="info-lbl">Cliente</div><div class="info-val" id="rCli">—</div></div>
+              </div>
+            </div>
+            <div class="result-grid">
+              <div class="rg-cell full"><div class="rg-lbl">ID Etiqueta</div><div class="rg-val" id="rEtqId" style="font-size:.7rem;font-family:monospace;word-break:break-all;">—</div></div>
+              <div class="rg-cell"><div class="rg-lbl">Nº Extintor</div><div class="rg-val" id="rNumExt">—</div></div>
+              <div class="rg-cell"><div class="rg-lbl">Classe</div><div class="rg-val" id="rClasse">—</div></div>
+              <div class="rg-cell"><div class="rg-lbl">Tipo</div><div class="rg-val" id="rTipo">—</div></div>
+              <div class="rg-cell"><div class="rg-lbl">Carga</div><div class="rg-val" id="rKg">—</div></div>
+              <div class="rg-cell"><div class="rg-lbl">Validade</div><div class="rg-val" id="rVal">—</div></div>
+              <div class="rg-cell"><div class="rg-lbl">Recarga</div><div class="rg-val" id="rRec">—</div></div>
+              <div class="rg-cell full"><div class="rg-lbl">Local</div><div class="rg-val" id="rLoc">—</div></div>
+            </div>
+            <div class="btn-row" style="margin-top:4px;">
+              <button class="btn btn-secondary" onclick="consultarNov()"><i class="fas fa-sync-alt"></i> Atualizar</button>
+              <button class="btn btn-secondary" onclick="limparResult()"><i class="fas fa-times"></i> Limpar</button>
+            </div>
           </div>
         </div>
+
+        <div id="ldMain" style="display:none;flex-direction:column;align-items:center;padding:24px;">
+          <div style="width:32px;height:32px;border:3px solid #E0E8F0;border-top-color:#1E3B5A;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:10px;"></div>
+          <p style="font-size:.8rem;color:#6B7A8F;">Consultando banco de dados...</p>
+        </div>
+      </div>
+    </div><!-- /scanner -->
+
+    <!-- ══ ETIQUETA ══ -->
+    <div class="page" id="pageEtiqueta">
+
+      <!-- Subtabs -->
+      <div class="subtabs">
+        <button class="stab active" onclick="goSub('nova')" id="stNova"><i class="fas fa-plus"></i> Nova</button>
+        <button class="stab" onclick="goSub('lista')" id="stLista"><i class="fas fa-list"></i> Lista</button>
+        <button class="stab" onclick="goSub('extintor')" id="stExt"><i class="fas fa-fire-extinguisher"></i> Extintor</button>
       </div>
 
-      <!-- ── Foto / Upload ── -->
-      <div id="spFoto" style="display:none;">
-        <div class="card">
-          <div class="card-hd"><i class="fas fa-image"></i> Foto ou Upload da Cédula</div>
+      <!-- Nova Etiqueta -->
+      <div class="subpane active" id="spNova">
+        <div class="p">
 
-          <!-- Upload zone -->
-          <div class="upload-zone" id="uploadZone" style="display:block;">
-            <i class="fas fa-cloud-upload-alt"></i>
-            <p>
-              <strong>Arraste a foto aqui</strong> ou clique para selecionar<br>
-              <span style="font-size:.72rem;">JPG · PNG · WEBP · BMP — máx. 10 MB</span>
-            </p>
-            <input type="file" id="inputFoto" accept="image/jpeg,image/png,image/webp,image/bmp,image/gif"
-              onchange="carregarImagem(this)">
+          <!-- Scanner QR -->
+          <div class="card" style="padding:12px;">
+            <div class="card-head" style="margin-bottom:10px;">
+              <div class="card-head-icon"><i class="fas fa-camera"></i></div>
+              <div class="card-head-text"><h3>Escanear QR Code</h3><p>Aponte para o selo INMETRO</p></div>
+            </div>
+            <div class="scan-wrap rect" id="sbEtq">
+              <div id="qr-reader-etiqueta"></div>
+              <div class="scan-overlay">
+                <div class="scan-corner sc-tl"></div>
+                <div class="scan-corner sc-tr"></div>
+                <div class="scan-corner sc-bl"></div>
+                <div class="scan-corner sc-br"></div>
+                <div class="scan-line"></div>
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="btnStartEtq" onclick="startScannerEtq()">
+                <i class="fas fa-camera"></i> Escanear
+              </button>
+              <button class="btn btn-secondary hidden" id="btnStopEtq" onclick="stopScannerEtq()">
+                <i class="fas fa-stop"></i> Parar
+              </button>
+              <button class="btn-icon" onclick="toggleFlash()" title="Lanterna"><i class="fas fa-bolt"></i></button>
+            </div>
           </div>
 
-          <!-- Botão câmera nativa (captura) -->
-          <div style="text-align:center;margin:-4px 0 12px;font-size:.74rem;color:var(--muted);">— ou —</div>
-          <label class="btn btn-navy" style="cursor:pointer;margin-bottom:14px;">
-            <i class="fas fa-camera"></i> Tirar Foto com a Câmera
-            <input type="file" id="inputCaptura" accept="image/*" capture="environment"
-              style="display:none;" onchange="carregarImagem(this)">
-          </label>
-
-          <!-- Preview da imagem carregada -->
-          <div id="imgPreviewWrap" style="display:none;position:relative;" class="img-preview-wrap">
-            <img id="imgPreview" src="" alt="Cédula">
-            <canvas id="canvasOverlay"></canvas>
-            <div class="processing hidden" id="processingOverlay">
-              <div class="spin"></div>
-              <p>Processando imagem...</p>
+          <!-- Paste WhatsApp -->
+          <div class="paste-area">
+            <div class="label"><i class="fas fa-paste" style="color:#3d6b99;"></i> Ou cole a mensagem do WhatsApp:</div>
+            <textarea class="input" id="waPaste" rows="3"
+              placeholder="Oi, envie essa mensagem para receber mais informações sobre o produto e0f38c65-..."
+              oninput="extrairUUID(this.value)"></textarea>
+            <div class="uuid-result" id="uuidOk">
+              <i class="fas fa-tag"></i> ID: <span id="uuidVal"></span>
             </div>
-            <button class="img-clear-btn" onclick="limparImagem()">
-              <i class="fas fa-times"></i>
+          </div>
+
+          <!-- Dados -->
+          <div class="card">
+            <div class="card-head">
+              <div class="card-head-icon"><i class="fas fa-tag"></i></div>
+              <div class="card-head-text"><h3>Dados da Etiqueta</h3></div>
+            </div>
+
+            <div class="field">
+              <label class="label">ID da Etiqueta <span class="req">*</span></label>
+              <input type="text" class="input" id="etqId" placeholder="Preenchido via QR Code ou cole a mensagem" readonly>
+            </div>
+
+            <!-- Cliente -->
+            <div class="field">
+              <label class="label">Cliente <span class="req">*</span></label>
+              <div class="drop-wrap" id="sdCliente">
+                <div class="drop-input-wrap">
+                  <i class="drop-prefix fas fa-user-tie"></i>
+                  <input type="text" class="input" id="cliSearch"
+                    placeholder="Buscar cliente..."
+                    oninput="filtrarCliente(this.value)"
+                    onfocus="abrirDropCliente()"
+                    autocomplete="off">
+                  <i class="drop-clear fas fa-times" id="cliClear" onclick="limparCliente()"></i>
+                </div>
+                <div class="drop-list" id="cliList"></div>
+              </div>
+              <div class="chip hidden" id="cliChip">
+                <div class="chip-icon"><i class="fas fa-user-tie"></i></div>
+                <div class="chip-info">
+                  <div class="chip-name" id="cliChipNome"></div>
+                  <div class="chip-sub" id="cliChipSub"></div>
+                </div>
+                <button class="chip-rm" onclick="limparCliente()"><i class="fas fa-times"></i></button>
+              </div>
+            </div>
+
+            <!-- Extintor -->
+            <div class="field">
+              <label class="label">Extintor <span class="req">*</span></label>
+              <div class="drop-wrap" id="sdExtintor">
+                <div class="drop-input-wrap">
+                  <i class="drop-prefix fas fa-fire-extinguisher"></i>
+                  <input type="text" class="input" id="extSearch"
+                    placeholder="Buscar por Nº, tipo ou local..."
+                    oninput="filtrarExtintor(this.value)"
+                    onfocus="abrirDropExtintor()"
+                    autocomplete="off">
+                  <i class="drop-clear fas fa-times" id="extClear" onclick="limparExtintor()"></i>
+                </div>
+                <div class="drop-list" id="extList"></div>
+              </div>
+              <div class="chip hidden" id="extChip">
+                <div class="chip-icon"><i class="fas fa-fire-extinguisher"></i></div>
+                <div class="chip-info">
+                  <div class="chip-name" id="extChipNome"></div>
+                  <div class="chip-sub" id="extChipSub"></div>
+                </div>
+                <button class="chip-rm" onclick="limparExtintor()"><i class="fas fa-times"></i></button>
+              </div>
+              <div class="ext-detail hidden" id="extDetalhe">
+                <div class="ext-detail-row"><span class="edl">Classe</span><span class="edv" id="edClasse">—</span></div>
+                <div class="ext-detail-row"><span class="edl">Tipo</span><span class="edv" id="edTipo">—</span></div>
+                <div class="ext-detail-row"><span class="edl">Carga</span><span class="edv" id="edKg">—</span></div>
+                <div class="ext-detail-row"><span class="edl">Validade</span><span class="edv" id="edVal">—</span></div>
+                <div class="ext-detail-row"><span class="edl">Recarga</span><span class="edv" id="edRec">—</span></div>
+              </div>
+            </div>
+
+            <!-- Local -->
+            <div class="field">
+              <label class="label">
+                Local de Instalação
+                <span style="font-size:.65rem;background:#DFF0E4;color:#0E6832;border-radius:6px;padding:1px 6px;font-weight:600;margin-left:4px;">auto</span>
+              </label>
+              <input type="text" class="input" id="etqLocal" placeholder="Preenchido ao selecionar o extintor" readonly>
+            </div>
+            <div style="margin-top:-6px;margin-bottom:10px;">
+              <button onclick="toggleLocalManual()" style="background:none;border:none;color:#1E3B5A;font-size:.72rem;font-weight:600;cursor:pointer;padding:0;">
+                <i class="fas fa-pen"></i> Editar local manualmente
+              </button>
+            </div>
+            <div id="localManualWrap" class="hidden">
+              <input type="text" class="input" id="etqLocalManual" placeholder="Digite o local..." style="margin-bottom:10px;">
+            </div>
+
+            <!-- Lote de Selos / Selo -->
+            <div class="field">
+              <label class="label" style="display:flex;align-items:center;gap:6px;">
+                <i class="fas fa-shield-alt" style="color:#5b21b6;font-size:.8rem;"></i>
+                Selo INMETRO
+                <span style="font-size:.65rem;background:#ede9fe;color:#5b21b6;border-radius:6px;padding:1px 6px;font-weight:600;margin-left:2px;">opcional</span>
+              </label>
+              <!-- Origem do Selo -->
+              <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border-radius:30px;border:1.5px solid #1E3B5A;background:#EEF3FA;font-size:.76rem;font-weight:600;color:#1E3B5A;" id="slblLote">
+                  <input type="radio" name="seloOrigem" value="lote" checked onchange="seloTrocarOrigem('lote')" style="width:13px;margin:0;">
+                  <i class="fas fa-layer-group" style="font-size:.7rem;"></i> Do Lote
+                </label>
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border-radius:30px;border:1.5px solid #E4EAF0;background:#fff;font-size:.76rem;font-weight:600;color:#6B7A8F;" id="sblrScanner">
+                  <input type="radio" name="seloOrigem" value="scanner" onchange="seloTrocarOrigem('scanner')" style="width:13px;margin:0;">
+                  <i class="fas fa-camera" style="font-size:.7rem;"></i> Capturar Foto
+                </label>
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border-radius:30px;border:1.5px solid #E4EAF0;background:#fff;font-size:.76rem;font-weight:600;color:#6B7A8F;" id="sblrManual">
+                  <input type="radio" name="seloOrigem" value="manual" onchange="seloTrocarOrigem('manual')" style="width:13px;margin:0;">
+                  <i class="fas fa-keyboard" style="font-size:.7rem;"></i> Manual
+                </label>
+              </div>
+              <!-- Do Lote -->
+              <div id="seloOrigemLote">
+                <select class="input" id="seloLoteSelect" onchange="seloLoteCarregarSelos(this.value)" style="margin-bottom:6px;">
+                  <option value="">Selecione o Lote</option>
+                </select>
+                <select class="input" id="seloItemSelect" onchange="seloSelecionarItem(this.value)">
+                  <option value="">Selecione o Selo</option>
+                </select>
+                <div id="seloLoteDisplay" style="font-size:.74rem;color:#6B7A8F;margin-top:4px;font-family:monospace;"></div>
+              </div>
+              <!-- Capturar foto -->
+              <div id="seloOrigemScanner" style="display:none;">
+                <div style="position:relative;">
+                  <input type="text" class="input input-mono" id="seloCodigoInput"
+                    placeholder="Código extraído da foto do selo..."
+                    style="padding-right:90px;">
+                  <div style="position:absolute;right:4px;top:50%;transform:translateY(-50%);display:flex;gap:3px;">
+                    <button type="button" onclick="document.getElementById('seloCodigoInput').value=''"
+                      style="padding:5px 7px;border-radius:20px;background:#f0f4f8;border:none;color:#6B7A8F;font-size:.7rem;cursor:pointer;">
+                      <i class="fas fa-times"></i>
+                    </button>
+                    <button type="button" onclick="goPage('Lotes')"
+                      style="padding:5px 9px;border-radius:20px;background:#5b21b6;border:none;color:white;font-size:.7rem;font-weight:600;cursor:pointer;white-space:nowrap;">
+                      <i class="fas fa-camera"></i> Foto
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <!-- Manual -->
+              <div id="seloOrigemManual" style="display:none;">
+                <input type="text" class="input input-mono" id="seloManualInput"
+                  placeholder="Ex: ZZVH12K2FJTOCX9000">
+              </div>
+            </div>
+
+            <div class="sep"></div>
+            <button class="btn btn-success" id="btnSalvarEtq" onclick="salvarEtiqueta()">
+              <i class="fas fa-save"></i> Salvar Etiqueta
             </button>
           </div>
 
-          <div id="uploadActions" style="display:none;">
-            <div class="btn-row" style="margin-bottom:10px;">
-              <button class="btn btn-gold" onclick="lerImagemUpload()">
-                <i class="fas fa-search"></i> Ler Códigos da Imagem
-              </button>
-              <button class="btn btn-outline" onclick="limparImagem()">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-            <p style="font-size:.7rem;color:var(--muted);text-align:center;line-height:1.5;">
-              A imagem é processada localmente no dispositivo — nenhum dado é enviado para servidores.
-            </p>
-          </div>
-        </div>
-
-        <!-- Resultado do upload -->
-        <div id="resFoto" style="display:none;">
+          <!-- Preview -->
           <div class="card">
-            <div class="card-hd">
-              <i class="fas fa-microscope" style="color:var(--gold);"></i> Resultado da Análise
-              <button class="btn-copy" style="margin-left:auto;" onclick="copiarUltimoFoto()"><i class="fas fa-copy"></i> Copiar</button>
+            <div class="card-head">
+              <div class="card-head-icon"><i class="fas fa-print"></i></div>
+              <div class="card-head-text"><h3>Pré-visualização</h3><p>33×22mm @ 300dpi</p></div>
             </div>
-            <div id="resFotoContent"></div>
+            <div class="canvas-wrap">
+              <canvas id="etqCanvas" width="394" height="264" style="width:min(311px,100%);height:auto;"></canvas>
+            </div>
+            <button class="btn btn-primary" onclick="gerarEtiqueta()">
+              <i class="fas fa-download"></i> Gerar Etiqueta 33×22mm (300dpi)
+            </button>
+          </div>
+
+        </div>
+      </div><!-- /spNova -->
+
+      <!-- Lista Etiquetas -->
+      <div class="subpane" id="spLista">
+        <div class="p">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <span style="font-size:.88rem;font-weight:700;color:#13293D;">Etiquetas Salvas</span>
+            <button class="btn btn-secondary btn-sm" onclick="carregarEtiquetasAPI()">
+              <i class="fas fa-sync-alt"></i> Atualizar
+            </button>
+          </div>
+          <div id="listaEtq"><div class="empty"><i class="fas fa-tag"></i><p>Nenhuma etiqueta salva</p></div></div>
+        </div>
+      </div>
+
+      <!-- Novo Extintor -->
+      <div class="subpane" id="spExt">
+        <div class="p">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-head-icon"><i class="fas fa-fire-extinguisher"></i></div>
+              <div class="card-head-text"><h3>Cadastrar Extintor</h3></div>
+            </div>
+
+            <div class="field">
+              <label class="label">Nº Extintor <span class="req">*</span></label>
+              <input type="text" class="input" id="nNro" placeholder="Ex: 001">
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label class="label">Classe</label>
+                <select class="input" id="nClasse">
+                  <option value="">Selecione</option>
+                  <option>A</option><option>B</option><option>C</option>
+                  <option>AB</option><option>ABC</option><option>D</option><option>K</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="label">Tipo</label>
+                <select class="input" id="nTipo">
+                  <option value="">Selecione</option>
+                  <option>Pó ABC</option><option>Pó BC</option>
+                  <option>CO2</option><option>Água</option>
+                  <option>Espuma</option><option>Halotron</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">Capacidade</label>
+              <div style="position:relative;">
+                <input type="number" class="input" id="nKg" placeholder="Ex: 6" min="1" max="999" oninput="fmtKg(this)" style="padding-right:44px;">
+                <span id="kgSuf" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:.8rem;color:#6B7A8F;font-weight:600;display:none;">kg</span>
+              </div>
+              <div id="kgPrev" style="font-size:.72rem;color:#0E6832;font-weight:600;margin-top:4px;margin-left:4px;display:none;"></div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label class="label">Validade</label>
+                <input type="date" class="input" id="nVal">
+              </div>
+              <div class="field">
+                <label class="label">Últ. Recarga</label>
+                <input type="date" class="input" id="nRec">
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">Local de Instalação</label>
+              <input type="text" class="input" id="nLocal" placeholder="Ex: Corredor 2, Sala A">
+            </div>
+            <button class="btn btn-success" id="btnSalvExt" onclick="salvarExtintor()">
+              <i class="fas fa-save"></i> Salvar Extintor
+            </button>
           </div>
         </div>
       </div>
 
-    </div>
+    </div><!-- /etiqueta -->
 
-    <!-- ═══════ MANUAL ═══════ -->
-    <div class="pane" id="pManual">
-      <div class="card" style="margin-top:4px;">
-        <div class="card-hd"><i class="fas fa-paste"></i> Colar código da cédula</div>
-        <p style="font-size:.76rem;color:var(--muted);margin-bottom:10px;line-height:1.55;">
-          Cole aqui o texto/código lido da cédula — número de série, código de barras, Data Matrix ou qualquer sequência.
-        </p>
-        <textarea class="ta" id="manualTa" placeholder="Exemplos:&#10;• A1234567-8&#10;• 0010000050000000015&#10;• BC2025001234567&#10;• Qualquer código ou texto da cédula"></textarea>
-        <div class="btn-row" style="margin-top:10px;">
-          <button class="btn btn-green" onclick="analisarManual()"><i class="fas fa-microscope"></i> Analisar</button>
-          <button class="btn btn-outline" onclick="document.getElementById('manualTa').value='';document.getElementById('manualRes').style.display='none'">
-            <i class="fas fa-eraser"></i> Limpar
+    <!-- ══ LOTES DE SELOS ══ -->
+    <div class="page" id="pageLotes">
+      <div class="p">
+
+        <!-- Captura Selo INMETRO -->
+        <div class="card" style="padding:12px;">
+          <div class="card-head" style="margin-bottom:10px;">
+            <div class="card-head-icon" style="background:#ede9fe;"><i class="fas fa-shield-alt" style="color:#5b21b6;"></i></div>
+            <div class="card-head-text">
+              <h3>Capturar Selo INMETRO</h3>
+              <p>Foto ou upload do selo da Casa da Moeda</p>
+            </div>
+          </div>
+
+          <!-- Sub-tabs captura -->
+          <div style="display:flex;gap:6px;margin-bottom:10px;">
+            <button id="seloTabCam" onclick="seloGoTab('cam')"
+              style="flex:1;padding:9px;border-radius:10px;border:1.5px solid #1E3B5A;background:#1E3B5A;color:#fff;font-size:.76rem;font-weight:600;cursor:pointer;">
+              <i class="fas fa-camera"></i> Câmera
+            </button>
+            <button id="seloTabUpload" onclick="seloGoTab('upload')"
+              style="flex:1;padding:9px;border-radius:10px;border:1.5px solid #E4EAF0;background:#fff;color:#6B7A8F;font-size:.76rem;font-weight:600;cursor:pointer;">
+              <i class="fas fa-upload"></i> Upload
+            </button>
+          </div>
+
+          <!-- Câmera pane -->
+          <div id="seloPaneCam">
+            <div style="position:relative;width:100%;aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:#0a0a0a;margin-bottom:10px;">
+              <div id="seloIdleMsg" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(255,255,255,.35);">
+                <i class="fas fa-shield-alt" style="font-size:2.5rem;"></i>
+                <p style="font-size:.74rem;text-align:center;padding:0 20px;">Tire foto do selo INMETRO</p>
+              </div>
+              <video id="seloVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:none;"></video>
+              <img id="seloFotoPreview" style="display:none;width:100%;height:100%;object-fit:contain;" alt="">
+              <canvas id="seloCanvas" style="display:none;position:absolute;inset:0;width:100%;height:100%;"></canvas>
+              <!-- Corner guides -->
+              <div style="position:absolute;inset:0;pointer-events:none;" id="seloOverlay" style="display:none;">
+                <div class="scan-corner sc-tl"></div><div class="scan-corner sc-tr"></div>
+                <div class="scan-corner sc-bl"></div><div class="scan-corner sc-br"></div>
+              </div>
+            </div>
+            <div class="btn-row" id="seloBtnsCam">
+              <button class="btn btn-secondary" onclick="seloFechar()"><i class="fas fa-times"></i> Cancelar</button>
+              <button class="btn btn-primary" id="seloBtnTirar" onclick="seloTirarFoto()"><i class="fas fa-camera"></i> Tirar Foto</button>
+            </div>
+            <div class="btn-row hidden" id="seloBtnsFoto">
+              <button class="btn btn-secondary" onclick="seloNovamente()"><i class="fas fa-sync-alt"></i> Novamente</button>
+              <button class="btn btn-success" onclick="seloProcessar()"><i class="fas fa-cogs"></i> Processar</button>
+            </div>
+          </div>
+
+          <!-- Upload pane -->
+          <div id="seloPaneUpload" style="display:none;">
+            <label style="display:block;border:2px dashed #C5D8F5;border-radius:12px;padding:20px;text-align:center;cursor:pointer;background:#F8FAFD;margin-bottom:10px;">
+              <i class="fas fa-cloud-upload-alt" style="font-size:1.8rem;color:#1E3B5A;opacity:.4;display:block;margin-bottom:6px;"></i>
+              <span style="font-size:.76rem;color:#6B7A8F;">Selecione a foto do selo</span>
+              <input type="file" accept="image/*" style="display:none;" onchange="seloCarregarUpload(this)">
+            </label>
+            <img id="seloUploadPreview" src="" style="display:none;width:100%;border-radius:10px;margin-bottom:10px;" alt="">
+            <div class="btn-row hidden" id="seloBtnsUpload">
+              <button class="btn btn-success" onclick="seloProcessarUpload()"><i class="fas fa-cogs"></i> Processar Imagem</button>
+            </div>
+          </div>
+
+          <!-- Início câmera botão -->
+          <button class="btn btn-primary" id="seloBtnIniciarCam" onclick="seloIniciarCam()" style="margin-top:4px;">
+            <i class="fas fa-play"></i> Iniciar Câmera
           </button>
         </div>
+
+        <!-- Resultado extraído -->
+        <div id="seloResultado" style="display:none;">
+          <div class="card" style="border:1.5px solid #86efac;background:#f0fdf4;">
+            <div class="card-head" style="margin-bottom:8px;">
+              <div class="card-head-icon" style="background:#dff0e4;color:#0e6832;"><i class="fas fa-check-circle"></i></div>
+              <div class="card-head-text"><h3>Código Extraído</h3></div>
+            </div>
+            <div id="seloResultFields"></div>
+            <div class="btn-row" style="margin-top:10px;">
+              <button class="btn btn-secondary" onclick="seloNovaCaptura()"><i class="fas fa-sync-alt"></i> Nova Captura</button>
+              <button class="btn btn-success" onclick="seloAplicar()"><i class="fas fa-check"></i> Inserir</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista capturas sessão -->
+        <div id="seloListaWrap" style="display:none;margin-top:4px;">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <span style="font-size:.84rem;font-weight:700;color:#13293D;">Selos desta sessão (<span id="seloContador">0</span>)</span>
+              <button class="btn btn-secondary btn-sm" onclick="seloSalvarTodos()"><i class="fas fa-save"></i> Salvar Todos</button>
+            </div>
+            <div id="seloListaCapturas"></div>
+          </div>
+        </div>
+
+        <!-- Lotes carregados do Baserow -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;margin-bottom:8px;">
+          <span style="font-size:.84rem;font-weight:700;color:#13293D;"><i class="fas fa-layer-group" style="color:#1E3B5A;margin-right:6px;"></i>Lotes de Selos</span>
+          <button class="btn btn-secondary btn-sm" onclick="loadLotes()"><i class="fas fa-sync-alt"></i> Atualizar</button>
+        </div>
+        <div id="lotesLista"><div class="empty"><i class="fas fa-tags"></i><p>Nenhum lote carregado</p></div></div>
+
       </div>
-      <div id="manualRes" style="display:none;">
-        <div class="card">
-          <div class="card-hd"><i class="fas fa-search"></i> Análise</div>
-          <div id="manualResContent"></div>
+    </div>
+
+    <!-- ══ HISTÓRICO ══ -->
+    <div class="page" id="pageHistorico">
+      <div class="p">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span style="font-size:.88rem;font-weight:700;color:#13293D;">Histórico de Leituras</span>
+          <button class="btn btn-danger btn-sm" onclick="confirmarLimpar()">
+            <i class="fas fa-trash-alt"></i> Limpar
+          </button>
+        </div>
+        <div id="histLista"><div class="empty"><i class="fas fa-qrcode"></i><p>Nenhuma leitura ainda</p></div></div>
+      </div>
+    </div>
+
+    <!-- ══ CONFIG ══ -->
+    <div class="page" id="pageConfig">
+      <div class="p">
+        <!-- IA Config -->
+        <div class="cfg-block">
+          <div class="cfg-head"><i class="fas fa-bolt"></i> IA — Groq (llama-3.2-vision)</div>
+          <div style="background:#EDF7ED;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:.74rem;color:#1a6b2a;line-height:1.6;border:1px solid #a8d5b0;">
+            <strong>Groq é gratuito e ultra-rápido.</strong><br>
+            Obtenha sua chave em <strong>console.groq.com</strong> &bull; Plano gratuito disponível
+          </div>
+          <div class="field">
+            <label class="label">Chave API Groq <span class="req">*</span></label>
+            <input type="password" class="input" id="cfgAnthropicKey" placeholder="gsk_...">
+          </div>
+          <div class="cfg-actions">
+            <button class="btn btn-primary" onclick="salvarCfg()"><i class="fas fa-save"></i> Salvar</button>
+            <button class="btn btn-secondary" onclick="testarIA()"><i class="fas fa-bolt"></i> Testar Groq</button>
+          </div>
+        </div>
+
+        <!-- Baserow Config -->
+        <div class="cfg-block">
+          <div class="cfg-head"><i class="fas fa-database"></i> Banco de Dados (Baserow)</div>
+          <div class="field"><label class="label">URL da API</label>
+            <input type="text" class="input" id="cfgUrl" value="https://api.baserow.io/api/"></div>
+          <div class="field"><label class="label">Token de Autenticação</label>
+            <input type="password" class="input" id="cfgToken" placeholder="Token..."></div>
+          <div class="field"><label class="label">ID Tabela Extintores</label>
+            <input type="text" class="input" id="cfgTblExt" placeholder="Ex: 12345"></div>
+          <div class="field"><label class="label">ID Tabela Clientes</label>
+            <input type="text" class="input" id="cfgTblCli" placeholder="Ex: 12346"></div>
+          <div class="field"><label class="label">ID Tabela Etiquetas</label>
+            <input type="text" class="input" id="cfgTblEtq" placeholder="Ex: 12347"></div>
+          <div class="field"><label class="label">ID Tabela Lotes de Selos</label>
+            <input type="text" class="input" id="cfgTblLotes" placeholder="Ex: 890169"></div>
+          <div class="field"><label class="label">ID Tabela Selos</label>
+            <input type="text" class="input" id="cfgTblSelos" placeholder="Ex: 890178"></div>
+          <div class="cfg-actions">
+            <button class="btn btn-primary" onclick="salvarCfg()"><i class="fas fa-save"></i> Salvar</button>
+            <button class="btn btn-secondary" onclick="testarAPI()"><i class="fas fa-plug"></i> Testar</button>
+          </div>
+        </div>
+
+        <div class="cfg-block">
+          <div class="cfg-head"><i class="fas fa-mobile-alt"></i> Sobre</div>
+          <p style="font-size:.82rem;color:#4A5B6E;line-height:1.7;">
+            <strong>PCI Scanner v6.0</strong> — PWA<br>
+            Captura com Groq Vision (llama-3.2) para selos INMETRO.<br>
+            Extração local instantânea da mensagem WhatsApp.<br>
+            Portaria 314/2025 — Casa da Moeda do Brasil.
+          </p>
         </div>
       </div>
     </div>
 
-    <!-- ═══════ LOG ═══════ -->
-    <div class="pane" id="pLog">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-        <div style="font-weight:700;font-size:.88rem;color:#13293D;">
-          <i class="fas fa-list" style="color:var(--navy2);margin-right:6px;"></i>
-          Capturas (<span id="logTotal">0</span>)
-        </div>
-        <div style="display:flex;gap:7px;">
-          <button class="btn btn-sm btn-outline" onclick="exportarLog()"><i class="fas fa-download"></i> JSON</button>
-          <button class="btn btn-sm btn-outline" onclick="exportarTxt()"><i class="fas fa-file-alt"></i> TXT</button>
-          <button class="btn btn-sm btn-danger" onclick="limparLog()"><i class="fas fa-trash"></i></button>
-        </div>
-      </div>
-      <div class="card">
-        <div id="logLista">
-          <div class="empty"><i class="fas fa-money-bill"></i><p>Nenhuma leitura registrada.<br>Escaneie uma cédula para popular o log.</p></div>
-        </div>
+  </div><!-- /pages -->
+
+  <!-- ─── BOTTOM NAV ─── -->
+  <nav class="bottomnav">
+    <button class="nav-item active" id="navScanner" onclick="goPage('Scanner')">
+      <i class="fas fa-camera"></i><span>Scanner</span>
+    </button>
+    <button class="nav-item" id="navEtiqueta" onclick="goPage('Etiqueta')">
+      <i class="fas fa-tag"></i><span>Etiqueta</span>
+    </button>
+    <button class="nav-item" id="navLotes" onclick="goPage('Lotes')">
+      <i class="fas fa-tags"></i><span>Selos</span>
+    </button>
+    <button class="nav-item" id="navHistorico" onclick="goPage('Historico')">
+      <i class="fas fa-history"></i><span>Hist.</span>
+    </button>
+    <button class="nav-item" id="navConfig" onclick="goPage('Config')">
+      <i class="fas fa-cog"></i><span>Config</span>
+    </button>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- ─── MODAL: QR RAW ─── -->
+<div class="modal-bg hidden" id="mQR">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title"><i class="fas fa-qrcode" style="color:#1E3B5A;"></i> QR Code INMETRO Lido</div>
+
+    <!-- Tipo detectado -->
+    <div id="mQRTipo" style="display:flex;align-items:center;gap:8px;background:#EEF3FA;border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:.78rem;font-weight:600;color:#1E3B5A;">
+      <i id="mQRTipoIco" class="fas fa-tag"></i>
+      <span id="mQRTipoTxt">Analisando...</span>
+    </div>
+
+    <!-- Conteúdo bruto -->
+    <div class="mini-label">Conteúdo lido:</div>
+    <div class="qr-raw" id="mQRText"></div>
+
+    <!-- ID extraído -->
+    <div id="mQRUuidWrap">
+      <div class="mini-label">ID do Selo INMETRO (extraído):</div>
+      <div class="uuid-box ok" style="word-break:break-all;">
+        <i class="fas fa-check-circle" style="flex-shrink:0;margin-top:2px;"></i>
+        <span id="mQRUuidVal" style="font-family:monospace;font-size:.82rem;"></span>
       </div>
     </div>
 
-    <!-- ═══════ SOBRE ═══════ -->
-    <div class="pane" id="pSobre">
-      <div class="card" style="margin-top:4px;">
-        <div class="card-hd"><i class="fas fa-university"></i> Banco Central do Brasil</div>
-
-        <div class="info-blk gold">
-          <strong><i class="fas fa-money-bill-wave"></i> Cédulas do Real — elementos de segurança lidos</strong>
-          <ul>
-            <li><strong>Número de série:</strong> sequência alfanumérica única por cédula (ex: <code>A1234567-8</code>)</li>
-            <li><strong>Data Matrix:</strong> código 2D compacto presente em cédulas mais recentes</li>
-            <li><strong>Code 128 / Code 39:</strong> barcode linear com dados da série</li>
-            <li><strong>QR Code:</strong> em algumas séries, link para verificação BCB</li>
-            <li><strong>ITF / EAN:</strong> possíveis em embalagens de pacotes</li>
-          </ul>
-        </div>
-
-        <div class="info-blk blue">
-          <strong><i class="fas fa-camera"></i> Modo Foto / Upload</strong>
-          <ul>
-            <li>Tire uma foto diretamente com a câmera do dispositivo</li>
-            <li>Ou faça upload de foto já tirada</li>
-            <li>A imagem é processada <strong>100% local</strong> — sem envio para servidores</li>
-            <li>Melhor resultado: boa iluminação, foco, cédula plana</li>
-            <li>Tente tanto a frente quanto o verso da cédula</li>
-          </ul>
-        </div>
-
-        <div class="info-blk green">
-          <strong><i class="fas fa-road"></i> Objetivo do protótipo</strong>
-          <ul>
-            <li>Descobrir quais formatos o leitor consegue detectar</li>
-            <li>Identificar qual campo contém o número único da cédula</li>
-            <li>Exportar o log para análise e decisão de integração</li>
-          </ul>
-        </div>
-
-        <div class="info-blk yellow">
-          <strong><i class="fas fa-lightbulb"></i> Dicas de leitura</strong>
-          <ul>
-            <li>Use <strong>Câmera ao Vivo</strong> para leitura rápida em tempo real</li>
-            <li>Use <strong>Foto/Upload</strong> quando a leitura ao vivo não funcionar</li>
-            <li>Na foto, aproxime bem e mantenha foco no código específico</li>
-            <li>O verso das cédulas recentes costuma ter mais elementos de máquina</li>
-          </ul>
-        </div>
-      </div>
+    <!-- Sem ID -->
+    <div class="uuid-box warn hidden" id="mQRNoUuid">
+      <i class="fas fa-exclamation-triangle" style="flex-shrink:0;"></i>
+      ID não encontrado. Use a Entrada Manual com o código impresso no selo.
     </div>
 
-  </div><!-- /content -->
+    <!-- Link INMETRO se for URL -->
+    <div id="mQRLinkWrap" class="hidden" style="margin-top:8px;">
+      <div class="mini-label">Link de verificação INMETRO:</div>
+      <a id="mQRLink" href="#" target="_blank" style="display:flex;align-items:center;gap:6px;background:#DFF0E4;border-radius:10px;padding:9px 12px;font-size:.78rem;font-weight:600;color:#0E6832;text-decoration:none;">
+        <i class="fas fa-external-link-alt"></i>
+        <span id="mQRLinkTxt" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      </a>
+    </div>
 
-  <footer><i class="fas fa-university"></i> BCB Leitor de Cédulas · Protótipo v1.0</footer>
+    <div class="modal-btns" style="margin-top:14px;">
+      <button class="btn btn-primary" id="mQRUsar" onclick="usarUUID()">
+        <i class="fas fa-tag"></i> Usar na Etiqueta
+      </button>
+      <button class="btn btn-secondary" onclick="fecharMQR()">Fechar</button>
+    </div>
+  </div>
 </div>
 
-<!-- NOTIF -->
-<div class="notif" id="notif" style="display:none;">
-  <i id="notifIco" style="font-size:1rem;"></i>
-  <span id="notifMsg"></span>
+<!-- ─── MODAL: CONFIRM ─── -->
+<div class="modal-bg hidden" id="mConf">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title"><i class="fas fa-exclamation-triangle" style="color:#e53935;"></i> Confirmar</div>
+    <p style="font-size:.86rem;color:#4A5B6E;line-height:1.6;" id="mConfMsg"></p>
+    <div class="modal-btns">
+      <button class="btn btn-primary" id="mConfOk">Confirmar</button>
+      <button class="btn btn-secondary" onclick="fecharMConf()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── TOAST ─── -->
+<div class="toast" id="toast">
+  <i id="toastIco"></i><span id="toastMsg"></span>
 </div>
 
 <script>
 'use strict';
+// ═══════════════════════════════════
+// STATE
+// ═══════════════════════════════════
+let hist=JSON.parse(localStorage.getItem('pci_hist')||'[]');
+let etqs=JSON.parse(localStorage.getItem('pci_etqs')||'[]');
+let uuidAtual=null, ultimoQR=null, ntTimer=null;
+let apiExt=[], apiCli=[], apiLotes=[], apiSelos=[];
+let extSel=null, cliSel=null, seloSel=null;
+let localManual=false;
+// Estado câmera de captura de selos
+let seloStream=null, seloFotoURL=null, seloUploadURL=null;
+let seloCapturasSession=[];
+let seloUltimoId=null;
+let pendSeloParaEtq=false; // quando true, ao aplicar volta para aba Etiqueta
+let cfg={
+  url:'https://api.baserow.io/api/',
+  token:'',
+  anthropicKey:'',
+  tables:{ext:'',cli:'',etq:'',lotes:'',selos:''}
+};
 
-// ═══════════════════ ESTADO ═══════════════════
-let reader     = null;
-let scanning   = false;
-let flashOn    = false;
-let ntTimer    = null;
-let ultimoRaw  = '';
-let ultimoFoto = '';
-let log = JSON.parse(localStorage.getItem('bcb_scanner_log') || '[]');
-
-// ═══════════════════ TABS ═══════════════════
-function goTab(t) {
-  ['Leitor','Manual','Log','Sobre'].forEach(x => {
-    document.getElementById('t'+x).classList.remove('on');
-    document.getElementById('p'+x).classList.remove('on');
+// ═══════════════════════════════════
+// INIT
+// ═══════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  loadCfg();
+  renderHist();
+  drawCanvas();
+  setTimeout(()=>{ if(cfg.token){loadExt();loadCli();} },700);
+  document.addEventListener('click',e=>{
+    if(!document.getElementById('sdCliente').contains(e.target)) closeDropCli();
+    if(!document.getElementById('sdExtintor').contains(e.target)) closeDropExt();
   });
-  document.getElementById('t'+t).classList.add('on');
-  document.getElementById('p'+t).classList.add('on');
-  if (t !== 'Leitor') stopScanner();
-  if (t === 'Log') renderLog();
+  // Fix scan box height on mobile
+  fixScanHeight();
+  window.addEventListener('resize',fixScanHeight);
+});
+
+function fixScanHeight(){
+  // Torna o viewfinder quadrado baseado na largura real
+  const sb=document.getElementById('camWrap');
+  if(sb){ const w=sb.offsetWidth; if(w>0) sb.style.height=w+'px'; }
 }
 
-// ── Sub-tabs Câmera / Foto ──
-function goStab(s) {
-  ['Camera','Foto'].forEach(x => {
-    document.getElementById('st'+x).classList.remove('on');
-    document.getElementById('sp'+x).style.display = 'none';
+// ═══════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════
+function goPage(name){
+  ['Scanner','Etiqueta','Lotes','Historico','Config'].forEach(n=>{
+    document.getElementById('page'+n).classList.remove('active');
+    const nb=document.getElementById('nav'+n); if(nb) nb.classList.remove('active');
   });
-  document.getElementById('st'+s).classList.add('on');
-  document.getElementById('sp'+s).style.display = 'block';
-  if (s !== 'Camera') stopScanner();
+  document.getElementById('page'+name).classList.add('active');
+  const nb=document.getElementById('nav'+name); if(nb) nb.classList.add('active');
+  if(name!=='Scanner') stopCam();
+  if(name!=='Etiqueta') stopScannerEtq();
+  if(name!=='Lotes') seloPararCamera();
+  if(name==='Historico') renderHist();
+  if(name==='Etiqueta'){renderListaEtq();drawCanvas();seloPreencherLoteSelect();}
+  if(name==='Lotes'){loadLotes();}
+  document.getElementById('pages').scrollTop=0;
 }
 
-// ═══════════════════ FORMATOS ═══════════════════
-function getFormatos() {
-  const map = {
-    QR_CODE:     Html5QrcodeSupportedFormats.QR_CODE,
-    DATA_MATRIX: Html5QrcodeSupportedFormats.DATA_MATRIX,
-    CODE_128:    Html5QrcodeSupportedFormats.CODE_128,
-    CODE_39:     Html5QrcodeSupportedFormats.CODE_39,
-    AZTEC:       Html5QrcodeSupportedFormats.AZTEC,
-    PDF_417:     Html5QrcodeSupportedFormats.PDF_417,
-    EAN_13:      Html5QrcodeSupportedFormats.EAN_13,
-    ITF:         Html5QrcodeSupportedFormats.ITF,
-  };
-  return [...document.querySelectorAll('#fmtList input:checked')]
-    .map(cb => map[cb.value]).filter(Boolean);
+function goSub(s){
+  // Mapa explícito de IDs — evita bugs com cap()
+  const spMap={nova:'spNova',lista:'spLista',extintor:'spExt'};
+  const stMap={nova:'stNova',lista:'stLista',extintor:'stExt'};
+  Object.values(spMap).forEach(id=>document.getElementById(id).classList.remove('active'));
+  Object.values(stMap).forEach(id=>document.getElementById(id).classList.remove('active'));
+  if(spMap[s]) document.getElementById(spMap[s]).classList.add('active');
+  if(stMap[s]) document.getElementById(stMap[s]).classList.add('active');
+  if(s!=='nova') stopScannerEtq();
+  if(s==='lista') renderListaEtq();
 }
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 
-function toggleFmt(cb) {
-  const lbl = cb.closest('label');
-  if (!cb.checked) { lbl.style.opacity = '.45'; }
-  else             { lbl.style.opacity = '1'; }
-}
+// ═══════════════════════════════════════════════════════
+// CÂMERA NATIVA — Captura de imagem para IA
+// ═══════════════════════════════════════════════════════
+let camStream = null;
+let camStreamEtq = null;
+let qrEtq = null;
+let scanningEtq = false;
+let flashTrack = null;
 
-// ═══════════════════ SCANNER AO VIVO ═══════════════════
-async function startScanner() {
-  try {
-    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    s.getTracks().forEach(t => t.stop());
-  } catch(e) { notif('Sem permissão de câmera', 'error'); return; }
-
-  document.getElementById('bcb-reader').style.display = 'block';
-  document.getElementById('camIdle').style.display    = 'none';
-  document.getElementById('camGuide').style.display   = 'block';
-  document.getElementById('camStatus').style.display  = 'block';
-  document.getElementById('camBadge').textContent     = 'Ativo';
-  document.getElementById('camBadge').style.background = '#DFF0E4';
-  document.getElementById('camBadge').style.color = '#0e4d24';
-
-  const fmts = getFormatos();
-  if (!fmts.length) { notif('Selecione ao menos um formato', 'warning'); return; }
-
-  reader = new Html5Qrcode('bcb-reader', { verbose: false });
-
-  try {
-    await reader.start(
-      { facingMode: 'environment' },
-      {
-        fps: 15,
-        qrbox: { width: 280, height: 160 },  // retangular para cédulas
-        aspectRatio: 16/9,
-        formatsToSupport: fmts,
-        experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-        videoConstraints: {
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1920 }, height: { ideal: 1080 }
-        }
-      },
-      (decoded, result) => {
-        if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
-        const fmt = result?.result?.format?.formatName || 'DESCONHECIDO';
-        processarLeitura(decoded, fmt, 'camera_vivo');
-        document.getElementById('camStatus').textContent = '✅ Código detectado!';
-        setTimeout(() => {
-          if (scanning) document.getElementById('camStatus').textContent = 'Escaneando...';
-        }, 2000);
-      },
-      () => {}
-    );
-
-    scanning = true;
-    document.getElementById('btnStart').style.display = 'none';
-    document.getElementById('btnStop').style.display  = 'flex';
-    notif('Scanner ativo — enquadre a cédula', 'success');
-
-  } catch(e) {
-    resetCam();
-    notif('Erro: ' + e.message, 'error');
+// ── Iniciar câmera principal (modo IA) ──
+async function startCam(){
+  if(!cfg.anthropicKey){
+    toast('Configure a chave Groq na aba Config','warning');
+    goPage('Config'); return;
   }
-}
-
-function stopScanner() {
-  if (reader && scanning) {
-    reader.stop().then(() => { scanning = false; resetCam(); }).catch(() => {});
-  }
-}
-
-function resetCam() {
-  scanning = false;
-  try { document.getElementById('bcb-reader').style.display  = 'none'; } catch{}
-  try { document.getElementById('bcb-reader').innerHTML      = ''; } catch{}
-  try { document.getElementById('camIdle').style.display     = 'flex'; } catch{}
-  try { document.getElementById('camGuide').style.display    = 'none'; } catch{}
-  try { document.getElementById('camStatus').style.display   = 'none'; } catch{}
-  try { document.getElementById('btnStart').style.display    = 'flex'; } catch{}
-  try { document.getElementById('btnStop').style.display     = 'none'; } catch{}
-  try { document.getElementById('camBadge').textContent      = 'Parado'; } catch{}
-  try { document.getElementById('camBadge').style.background = '#E8F0FB'; } catch{}
-  try { document.getElementById('camBadge').style.color      = '#1a3b5d'; } catch{}
-  flashOn = false;
-  try { document.getElementById('btnFlash').style.color = ''; } catch{}
-}
-
-async function toggleFlash() {
-  if (!scanning) { notif('Inicie o scanner primeiro', 'warning'); return; }
-  try {
-    const vid = document.querySelector('#bcb-reader video');
-    if (!vid?.srcObject) return;
-    const track = vid.srcObject.getVideoTracks()[0];
-    if (!track.getCapabilities().torch) { notif('Lanterna não disponível', 'warning'); return; }
-    flashOn = !flashOn;
-    await track.applyConstraints({ advanced: [{ torch: flashOn }] });
-    document.getElementById('btnFlash').style.color = flashOn ? '#C9A227' : '';
-    notif(flashOn ? 'Lanterna ligada' : 'Lanterna desligada', 'info');
-  } catch { notif('Lanterna indisponível', 'warning'); }
-}
-
-// ═══════════════════ UPLOAD / FOTO ═══════════════════
-function carregarImagem(input) {
-  const file = input.files[0];
-  if (!file) return;
-  if (file.size > 10 * 1024 * 1024) { notif('Imagem muito grande (máx. 10 MB)', 'error'); return; }
-
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img  = document.getElementById('imgPreview');
-    const wrap = document.getElementById('imgPreviewWrap');
-    const zone = document.getElementById('uploadZone');
-    const acts = document.getElementById('uploadActions');
-
-    img.src = e.target.result;
-    img.onload = () => {
-      // Ajusta o canvas overlay ao tamanho real da imagem
-      const canvas = document.getElementById('canvasOverlay');
-      canvas.width  = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      canvas.style.width  = '100%';
-      canvas.style.height = '100%';
+  try{
+    const constraints={
+      video:{
+        facingMode:{ideal:'environment'},
+        width:{ideal:1920,min:640},
+        height:{ideal:1080,min:480},
+        focusMode:'continuous'
+      }
     };
-    zone.style.display = 'none';
-    wrap.style.display = 'block';
-    acts.style.display = 'block';
-    document.getElementById('resFoto').style.display = 'none';
-    notif('Imagem carregada — clique em Ler Códigos', 'success');
-  };
-  reader.readAsDataURL(file);
-}
-
-function limparImagem() {
-  document.getElementById('imgPreview').src = '';
-  document.getElementById('imgPreviewWrap').style.display = 'none';
-  document.getElementById('uploadActions').style.display  = 'none';
-  document.getElementById('uploadZone').style.display     = 'block';
-  document.getElementById('resFoto').style.display        = 'none';
-  document.getElementById('inputFoto').value    = '';
-  document.getElementById('inputCaptura').value = '';
-  const canvas = document.getElementById('canvasOverlay');
-  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-}
-
-async function lerImagemUpload() {
-  const img = document.getElementById('imgPreview');
-  if (!img.src || img.src === window.location.href) { notif('Carregue uma imagem primeiro', 'warning'); return; }
-
-  const overlay = document.getElementById('processingOverlay');
-  overlay.classList.remove('hidden');
-
-  // Usa Html5Qrcode para ler a imagem estática
-  const fmts = getFormatos().length ? getFormatos() :
-    ['QR_CODE','DATA_MATRIX','CODE_128','CODE_39','AZTEC','PDF_417','EAN_13','ITF']
-      .map(k => Html5QrcodeSupportedFormats[k]).filter(Boolean);
-
-  const tempReader = new Html5Qrcode('_tmp_reader_hidden');
-  const blob = await dataURLtoBlob(img.src);
-  const file = new File([blob], 'cedula.jpg', { type: 'image/jpeg' });
-
-  try {
-    const result = await tempReader.scanFile(file, false);
-    overlay.classList.add('hidden');
-    const raw = typeof result === 'string' ? result : (result?.decodedText || JSON.stringify(result));
-    ultimoFoto = raw;
-    // Formato: tenta detectar pelo conteúdo
-    const fmt = detectarFormatoImg(raw);
-    processarLeitura(raw, fmt, 'foto_upload');
-    document.getElementById('resFoto').style.display = 'block';
-    document.getElementById('resFotoContent').innerHTML = buildResultHTML(analisar(raw, fmt), raw, fmt);
-    notif('Código encontrado na imagem!', 'success');
-    desenharMarquee(raw);
-  } catch(e) {
-    overlay.classList.add('hidden');
-    // Nenhum código encontrado — mostra diagnóstico
-    document.getElementById('resFoto').style.display = 'block';
-    document.getElementById('resFotoContent').innerHTML = buildSemCodigo();
-    notif('Nenhum código detectado — veja dicas abaixo', 'warning');
+    camStream = await navigator.mediaDevices.getUserMedia(constraints);
+    const video = document.getElementById('camVideo');
+    video.srcObject = camStream;
+    await video.play();
+    // Guarda track para lanterna
+    flashTrack = camStream.getVideoTracks()[0];
+    // UI
+    document.getElementById('btnCamStart').classList.add('hidden');
+    document.getElementById('btnCamStop').classList.remove('hidden');
+    document.getElementById('btnCapture').classList.remove('hidden');
+    document.getElementById('camStatus').textContent = 'Câmera ativa — posicione o selo e capture';
+    toast('Câmera ativa!','success');
+  }catch(e){
+    toast('Erro ao acessar câmera: '+e.message,'error');
   }
 }
 
-function detectarFormatoImg(raw) {
-  if (/^https?:\/\//i.test(raw)) return 'QR_CODE';
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}/i.test(raw)) return 'QR_CODE';
-  if (/^\d{13}$/.test(raw)) return 'EAN_13';
-  if (/^[A-Z0-9\-]{6,20}$/.test(raw)) return 'CODE_128';
-  return 'DESCONHECIDO';
+// ── Parar câmera principal ──
+function stopCam(){
+  if(camStream){
+    camStream.getTracks().forEach(t=>t.stop());
+    camStream=null; flashTrack=null;
+  }
+  document.getElementById('camVideo').srcObject=null;
+  document.getElementById('btnCamStart').classList.remove('hidden');
+  document.getElementById('btnCamStop').classList.add('hidden');
+  document.getElementById('btnCapture').classList.add('hidden');
+  document.getElementById('camStatus').textContent='Pressione Iniciar';
+  // Esconde canvas de preview
+  document.getElementById('captureCanvas').style.display='none';
+  document.getElementById('camVideo').style.display='block';
 }
 
-function dataURLtoBlob(dataURL) {
-  return fetch(dataURL).then(r => r.blob());
-}
-
-function desenharMarquee(raw) {
-  // Destaque visual na imagem (borda verde)
-  const img    = document.getElementById('imgPreview');
-  const canvas = document.getElementById('canvasOverlay');
-  const ctx    = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = '#1a7c3e';
-  ctx.lineWidth   = Math.max(canvas.width / 200, 3);
-  ctx.strokeRect(canvas.width * 0.05, canvas.height * 0.05,
-                 canvas.width * 0.9,  canvas.height * 0.9);
-  ctx.fillStyle = 'rgba(26,124,62,0.08)';
-  ctx.fillRect(canvas.width * 0.05, canvas.height * 0.05,
-               canvas.width * 0.9,  canvas.height * 0.9);
-}
-
-function buildSemCodigo() {
-  return `<div class="res-card warn">
-    <div class="res-lbl">Resultado</div>
-    <div style="font-size:.84rem;color:#5a3000;line-height:1.7;font-weight:500;">
-      Nenhum código legível foi encontrado na imagem.
-    </div>
-  </div>
-  <div class="info-blk yellow">
-    <strong><i class="fas fa-lightbulb"></i> Dicas para melhorar a leitura:</strong>
-    <ul>
-      <li>Aproxime mais a câmera do código específico (não da cédula inteira)</li>
-      <li>Boa iluminação — evite sombras e reflexos</li>
-      <li>Mantenha a cédula plana e sem dobras na área do código</li>
-      <li>Tente o <strong>verso</strong> da cédula — geralmente tem mais elementos de máquina</li>
-      <li>Tente o <strong>Scanner ao Vivo</strong> — lê em tempo real com mais tentativas</li>
-      <li>Experimente desabilitar alguns formatos para focar apenas em Code 128 ou Data Matrix</li>
-    </ul>
-  </div>`;
-}
-
-// ═══════════════════ PROCESSAR LEITURA ═══════════════════
-function processarLeitura(raw, formato, origem) {
-  ultimoRaw = raw;
-  const analise = analisar(raw, formato);
-
-  const entry = { ts: new Date().toISOString(), raw, formato, origem, analise };
-  log.unshift(entry);
-  if (log.length > 300) log.pop();
-  salvarLog();
-  atualizarBadgeLog();
-
-  // Mostra no painel ao vivo
-  document.getElementById('resVivo').style.display = 'block';
-  document.getElementById('resVivoContent').innerHTML = buildResultHTML(analise, raw, formato);
-}
-
-// ═══════════════════ ANÁLISE ═══════════════════
-function analisar(raw, formato) {
-  const txt = (raw || '').trim();
-  const r = {
-    comprimento: txt.length,
-    formato,
-    tipo: 'desconhecido',
-    uuid: null,
-    url: null,
-    urlDominio: null,
-    serieCedula: null,
-    codigoBCB: null,
-    ean: null,
-    soNumeros: /^\d+$/.test(txt),
-    soAlfa:    /^[A-Z0-9\-\.\/\s]+$/i.test(txt),
-    encoding:  detectEncoding(txt),
-    padroes:   [],
-    raw:       txt
-  };
-
-  // ── UUID ──
-  const mUuid = txt.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
-  if (mUuid) { r.uuid = mUuid[0]; r.padroes.push('UUID'); }
-
-  // ── URL ──
-  const mUrl = txt.match(/https?:\/\/[^\s]+/i);
-  if (mUrl) {
-    r.url = mUrl[0];
-    try { r.urlDominio = new URL(mUrl[0]).hostname; } catch {}
-    r.padroes.push('URL');
-    if (/bcb\.gov\.br|bancocentral/i.test(txt)) r.padroes.push('URL_BCB');
+// ── Capturar frame e enviar para IA ──
+async function capturarIA(){
+  const video = document.getElementById('camVideo');
+  if(!camStream || video.readyState < 2){
+    toast('Câmera não está ativa','warning'); return;
   }
 
-  // ── Série de cédula BCB: letra(s) + dígitos + hífen + dígito verificador ──
-  // Formatos conhecidos: A1234567-8 / AA12345678 / BC-1234567-89
-  const mSerie = txt.match(/\b([A-Z]{1,3}[\-\s]?\d{5,9}[\-\s]?\d{1,2})\b/i);
-  if (mSerie) { r.serieCedula = mSerie[1].replace(/[\s]/g,''); r.padroes.push('SERIE_CEDULA'); }
+  // 1. Captura o frame atual em canvas
+  const canvas = document.getElementById('captureCanvas');
+  const W = video.videoWidth  || 1280;
+  const H = video.videoHeight || 720;
+  canvas.width  = W;
+  canvas.height = H;
+  canvas.getContext('2d').drawImage(video, 0, 0, W, H);
 
-  // ── Código longo BCB (19 dígitos típico do barcode) ──
-  const mBCB = txt.match(/\b\d{15,22}\b/);
-  if (mBCB) { r.codigoBCB = mBCB[0]; r.padroes.push('CODIGO_LONGO_BCB'); }
+  // 2. Mostra preview do frame capturado
+  canvas.style.display = 'block';
+  document.getElementById('camVideo').style.display = 'none';
+  document.getElementById('camStatus').textContent = 'Imagem capturada — analisando com IA...';
+  if(navigator.vibrate) navigator.vibrate([60,30,60]);
 
-  // ── EAN-13 ──
-  if (/^\d{13}$/.test(txt) && validarEAN13(txt)) { r.ean = txt; r.padroes.push('EAN_13_VALIDO'); }
+  // 3. Mostra status IA
+  const iaEl = document.getElementById('iaStatus');
+  iaEl.classList.remove('hidden');
+  iaEl.style.display = 'flex';
 
-  // ── Alfanumérico curto ──
-  if (txt.length >= 4 && txt.length <= 30 && /^[A-Z0-9\-]+$/i.test(txt))
-    r.padroes.push('ALFA_CURTO');
+  // 4. Converte para base64 JPEG (qualidade 0.92)
+  const base64 = canvas.toDataURL('image/jpeg', 0.92).split(',')[1];
 
-  // ── Tipo ──
-  if (r.uuid)            r.tipo = 'uuid';
-  else if (r.url)        r.tipo = 'url';
-  else if (r.serieCedula) r.tipo = 'serie_cedula';
-  else if (r.ean)        r.tipo = 'ean13';
-  else if (r.codigoBCB)  r.tipo = 'codigo_bcb';
-  else if (r.soNumeros)  r.tipo = 'numerico';
-  else if (r.soAlfa)     r.tipo = 'alfanumerico';
-  else                   r.tipo = 'texto_misto';
+  try{
+    document.getElementById('iaStatusTxt').textContent = 'Enviando para Groq Vision...';
+    document.getElementById('iaStatusSub').textContent  = 'llama-3.2-11b-vision analisa a imagem';
 
-  return r;
+    // Tenta extração local PRIMEIRO (sem custo, instantâneo)
+    // Groq Vision só é chamado se a extração local falhar
+    let resultado = null;
+
+    // Nota: para imagem, não há texto a extrair localmente —
+    // mas se o QR tiver sido decodificado e o texto estiver
+    // visível, a IA transcreve e extrairIDlocal pega no parsing
+    resultado = await extrairIDcomIA(base64);
+
+    if(resultado && resultado.id){
+      // Sucesso
+      document.getElementById('iaStatusTxt').textContent = '✅ ID encontrado!';
+      document.getElementById('iaStatusSub').textContent  = resultado.tipo || 'Extraído por IA';
+      setTimeout(()=>{ iaEl.style.display='none'; iaEl.classList.add('hidden'); }, 2000);
+
+      // Mostra modal com resultado
+      mostrarModalQR(resultado.rawText || resultado.id, 'scanner');
+      document.getElementById('rMetodoIco').className='fas fa-brain';
+      document.getElementById('rMetodoTxt').textContent='Groq Vision (llama-3.2)';
+
+    }else{
+      document.getElementById('iaStatusTxt').textContent = '⚠️ ID não encontrado';
+      document.getElementById('iaStatusSub').textContent  = resultado?.motivo || 'Tente novamente com melhor enquadramento';
+      setTimeout(()=>{ iaEl.style.display='none'; iaEl.classList.add('hidden'); }, 3500);
+      // Volta câmera
+      canvas.style.display='none';
+      document.getElementById('camVideo').style.display='block';
+      document.getElementById('camStatus').textContent='Reposicione e tente novamente';
+      toast('ID não localizado — reposicione o selo','warning');
+    }
+
+  }catch(e){
+    iaEl.style.display='none'; iaEl.classList.add('hidden');
+    canvas.style.display='none';
+    document.getElementById('camVideo').style.display='block';
+    document.getElementById('camStatus').textContent='Erro — tente novamente';
+    toast('Erro na análise: '+e.message,'error');
+    console.error('IA error:',e);
+  }
 }
 
-function detectEncoding(txt) {
-  if (/^[\x00-\x7F]*$/.test(txt)) return 'ASCII';
-  if (/^[\x00-\xFF]*$/.test(txt)) return 'Latin-1';
-  return 'UTF-8';
+// ═══════════════════════════════════════════════════════════
+// EXTRAÇÃO LOCAL — sem IA, regex pura (instantâneo)
+// Prioridade: 1º tenta localmente, 2º usa Groq Vision
+// ═══════════════════════════════════════════════════════════
+function extrairIDlocal(texto){
+  if(!texto) return null;
+  const t = texto.trim();
+
+  // 1. Após a palavra "produto" (mensagem WhatsApp INMETRO)
+  const mProd = t.match(/produto\s+([^\s]{6,})/i);
+  if(mProd) return { id: mProd[1].replace(/[^a-zA-Z0-9\-]/g,''), tipo:'MENSAGEM_WHATSAPP', rawText:t };
+
+  // 2. UUID padrão xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  const mUuid = t.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+  if(mUuid) return { id: mUuid[0], tipo:'UUID', rawText:t };
+
+  // 3. URL INMETRO com UUID
+  const mUrl = t.match(/https?:\/\/[^\s]+/i);
+  if(mUrl){
+    const urlUuid = mUrl[0].match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+    if(urlUuid) return { id: urlUuid[0], tipo:'URL_INMETRO', rawText:t, url: mUrl[0] };
+    return { id: mUrl[0], tipo:'URL_INMETRO', rawText:t, url: mUrl[0] };
+  }
+
+  // 4. Código alfanumérico (fallback — texto curto sem espaços)
+  if(t.length >= 8 && t.length <= 40 && /^[A-Z0-9]+$/i.test(t.replace(/[-_]/g,''))){
+    return { id: t.toUpperCase(), tipo:'CODIGO_ALFANUMERICO', rawText:t };
+  }
+
+  return null;
 }
 
-function validarEAN13(code) {
-  const d = code.split('').map(Number);
-  const s = d.slice(0, 12).reduce((a, v, i) => a + (i % 2 === 0 ? v : v * 3), 0);
-  return (10 - (s % 10)) % 10 === d[12];
+// ── Motor de IA: Groq Vision (llama-3.2-11b-vision-preview) ──
+async function extrairIDcomIA(base64Jpeg){
+  const prompt = `Analise esta imagem de um selo INMETRO (extintores de incendio, Brasil, Portaria 314/2025). Busque por: 1. Mensagem "produto XXXX" - extraia o codigo apos "produto". 2. UUID no formato xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 chars). 3. URL napalmadamao.inmetro.gov.br. 4. Codigo alfanumerico impresso. Responda SOMENTE em JSON sem markdown: {"encontrado":true,"id":"codigo-aqui","tipo":"UUID","rawText":"texto visto","confianca":"alta","motivo":"se nao encontrado"}`;
+
+  const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'Authorization': 'Bearer ' + cfg.anthropicKey
+    },
+    body: JSON.stringify({
+      model:       'meta-llama/llama-4-scout-17b-16e-instruct',
+      max_tokens:  256,
+      temperature: 0,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'image_url',
+            image_url: { url: 'data:image/jpeg;base64,' + base64Jpeg }
+          },
+          { type: 'text', text: prompt }
+        ]
+      }]
+    })
+  });
+
+  if(!resp.ok){
+    const err = await resp.text();
+    throw new Error('Groq API ' + resp.status + ': ' + err.substring(0,120));
+  }
+
+  const data = await resp.json();
+  const txt  = data.choices?.[0]?.message?.content || '{}';
+
+  // 1. Tenta extrair localmente do texto retornado pela IA
+  const local = extrairIDlocal(txt);
+  if(local) return { encontrado:true, ...local };
+
+  // 2. Parse JSON da resposta
+  try{
+    const clean  = txt.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    if(parsed.encontrado && parsed.id) return parsed;
+    return { encontrado:false, motivo: parsed.motivo || 'Nenhum ID na imagem', rawText:txt };
+  }catch{
+    return { encontrado:false, motivo:'Resposta inválida da IA', rawText:txt };
+  }
 }
 
-// ═══════════════════ BUILD HTML RESULTADO ═══════════════════
-function buildResultHTML(a, raw, fmt) {
-  const fmtMeta = {
-    QR_CODE:     { cls:'ft-ean', icon:'fas fa-qrcode',   label:'QR Code' },
-    DATA_MATRIX: { cls:'ft-dm',  icon:'fas fa-th',        label:'Data Matrix' },
-    CODE_128:    { cls:'ft-c128',icon:'fas fa-barcode',   label:'Code 128' },
-    CODE_39:     { cls:'ft-c39', icon:'fas fa-barcode',   label:'Code 39' },
-    AZTEC:       { cls:'ft-aztec',icon:'fas fa-asterisk', label:'Aztec' },
-    PDF_417:     { cls:'ft-pdf', icon:'fas fa-barcode',   label:'PDF 417' },
-    EAN_13:      { cls:'ft-ean', icon:'fas fa-barcode',   label:'EAN-13' },
-    ITF:         { cls:'ft-ean', icon:'fas fa-barcode',   label:'ITF' },
-    DESCONHECIDO:{ cls:'ft-other',icon:'fas fa-question', label:fmt },
-    MANUAL_INPUT:{ cls:'ft-other',icon:'fas fa-keyboard', label:'Manual' },
-  };
-  const fm = fmtMeta[fmt] || fmtMeta['DESCONHECIDO'];
-
-  let h = `<div class="fmt-tag ${fm.cls}"><i class="${fm.icon}"></i> ${fm.label}</div>`;
-
-  // Destaque: série da cédula
-  if (a.serieCedula) {
-    h += `<div class="cedula-badge cb-green"><i class="fas fa-tag"></i> Série da Cédula: ${escHtml(a.serieCedula)}</div><br>`;
-  }
-  // Destaque: código longo BCB
-  if (a.codigoBCB && a.codigoBCB !== raw) {
-    h += `<div class="cedula-badge cb-blue"><i class="fas fa-hashtag"></i> Código BCB: ${escHtml(a.codigoBCB)}</div><br>`;
-  }
-  // EAN
-  if (a.ean) {
-    h += `<div class="cedula-badge cb-gold"><i class="fas fa-barcode"></i> EAN-13 válido: ${escHtml(a.ean)}</div><br>`;
-  }
-  // URL BCB
-  if (a.padroes.includes('URL_BCB')) {
-    h += `<div class="cedula-badge cb-green"><i class="fas fa-check-circle"></i> URL BCB oficial</div><br>`;
-  }
-
-  // Grid analítico
-  h += `<div class="ag" style="margin-top:10px;">
-    <div class="ag-cell">
-      <div class="ag-lbl">Comprimento</div>
-      <div class="ag-val info">${a.comprimento} chars</div>
-    </div>
-    <div class="ag-cell">
-      <div class="ag-lbl">Tipo detectado</div>
-      <div class="ag-val info">${a.tipo}</div>
-    </div>
-    <div class="ag-cell">
-      <div class="ag-lbl">Encoding</div>
-      <div class="ag-val">${a.encoding}</div>
-    </div>
-    <div class="ag-cell">
-      <div class="ag-lbl">Padrões</div>
-      <div class="ag-val ${a.padroes.length ? 'green' : ''}" style="font-size:.74rem;">
-        ${a.padroes.join(' · ') || '—'}
-      </div>
-    </div>`;
-
-  if (a.uuid) {
-    h += `<div class="ag-cell hilite s2">
-      <div class="ag-lbl">UUID</div>
-      <div class="ag-val">${escHtml(a.uuid)}</div>
-    </div>`;
-  }
-  if (a.url) {
-    h += `<div class="ag-cell s2">
-      <div class="ag-lbl">URL</div>
-      <div class="ag-val" style="font-size:.74rem;">${escHtml(a.url.substring(0,80))}${a.url.length>80?'...':''}</div>
-    </div>`;
-  }
-  h += '</div>';
-
-  // Texto bruto
-  h += `<div style="font-size:.65rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">
-    <i class="fas fa-align-left"></i> Texto bruto completo
-  </div>
-  <div class="res-card info" style="border-radius:14px;padding:12px;">
-    <div class="res-val" style="font-size:.82rem;line-height:1.7;">${escHtml(raw)}</div>
-  </div>`;
-
-  return h;
+// ── Lanterna ──
+async function toggleFlash(){
+  const track = flashTrack || (camStreamEtq?.getVideoTracks()?.[0]);
+  if(!track){toast('Inicie a câmera primeiro','warning');return;}
+  try{
+    const caps = track.getCapabilities();
+    if(caps?.torch){
+      const settings = track.getSettings();
+      const isOn = settings.torch || false;
+      await track.applyConstraints({ advanced:[{ torch: !isOn }] });
+      const btn = document.getElementById('btnFlash');
+      btn.style.background = isOn ? '#EEF3FA' : '#FFF8E1';
+      btn.querySelector('i').style.color = isOn ? '#1E3B5A' : '#F0A500';
+      toast(isOn?'Lanterna desligada':'Lanterna ligada!','info');
+    }else{ toast('Lanterna não disponível neste dispositivo','warning'); }
+  }catch(e){ toast('Lanterna não disponível','warning'); }
 }
 
-// ═══════════════════ ANÁLISE MANUAL ═══════════════════
-function analisarManual() {
-  const txt = document.getElementById('manualTa').value.trim();
-  if (!txt) { notif('Cole algum texto primeiro', 'warning'); return; }
-  const analise = analisar(txt, 'MANUAL_INPUT');
-  const entry   = { ts: new Date().toISOString(), raw: txt, formato: 'MANUAL_INPUT', origem: 'manual', analise };
-  log.unshift(entry);
-  if (log.length > 300) log.pop();
-  salvarLog();
-  atualizarBadgeLog();
-  document.getElementById('manualRes').style.display    = 'block';
-  document.getElementById('manualResContent').innerHTML = buildResultHTML(analise, txt, 'MANUAL_INPUT');
-  notif('Análise concluída', 'success');
+// ── Scanner da aba Etiqueta (mantém Html5Qrcode como fallback rápido) ──
+async function startScannerEtq(){
+  try{
+    const constraints={video:{facingMode:{ideal:'environment'},width:{ideal:1920,min:640},height:{ideal:1080,min:480}}};
+    camStreamEtq = await navigator.mediaDevices.getUserMedia(constraints);
+    // Usa Html5Qrcode se disponível, senão câmera nativa
+    document.getElementById('qr-reader-etiqueta').innerHTML='';
+    qrEtq = new Html5Qrcode("qr-reader-etiqueta",{verbose:false});
+    const box = document.getElementById('sbEtq');
+    const w = Math.floor((box.offsetWidth||300)*0.72);
+    const h = Math.floor(w*0.75);
+    await qrEtq.start(
+      {facingMode:"environment"},
+      {fps:30,qrbox:{width:w,height:h},aspectRatio:1.333,
+       experimentalFeatures:{useBarCodeDetectorIfSupported:true},
+       videoConstraints:{facingMode:{exact:"environment"},width:{ideal:1920,min:640},height:{ideal:1080,min:480}}},
+      decoded=>{
+        if(navigator.vibrate)navigator.vibrate([80,40,80]);
+        stopScannerEtq();
+        mostrarModalQR(decoded,'etiqueta');
+      },
+      ()=>{}
+    );
+    scanningEtq=true;
+    document.getElementById('btnStartEtq').classList.add('hidden');
+    document.getElementById('btnStopEtq').classList.remove('hidden');
+    toast('Scanner ativo','success');
+  }catch(e){
+    toast('Erro ao acessar câmera','error');
+    console.error(e);
+  }
 }
 
-// ═══════════════════ LOG ═══════════════════
-function renderLog() {
-  const el = document.getElementById('logLista');
-  document.getElementById('logTotal').textContent = log.length;
-  if (!log.length) {
-    el.innerHTML = '<div class="empty"><i class="fas fa-money-bill"></i><p>Nenhuma leitura registrada.<br>Escaneie uma cédula para popular o log.</p></div>';
+function stopScannerEtq(){
+  if(qrEtq&&scanningEtq){
+    qrEtq.stop().then(()=>{
+      scanningEtq=false;
+      document.getElementById('btnStartEtq').classList.remove('hidden');
+      document.getElementById('btnStopEtq').classList.add('hidden');
+    }).catch(()=>{});
+  }
+  if(camStreamEtq){ camStreamEtq.getTracks().forEach(t=>t.stop()); camStreamEtq=null; }
+}
+
+// Parar tudo ao mudar de aba
+function stopScanner(){ stopCam(); }
+
+// ═══════════════════════════════════
+// MODAL QR RAW
+// ═══════════════════════════════════
+let qrOrigem='etiqueta';
+// ═══════════════════════════════════════════════════════
+// parsearQRInmetro — detecta formato do QR Code INMETRO
+// Portaria 314/2025 — Casa da Moeda do Brasil
+// Formatos possíveis:
+//   1. URL:  https://napalmadamao.inmetro.gov.br/selo/UUID
+//            https://inmpam.gov.br/...
+//   2. UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 chars)
+//   3. WA:   "Oi, envie... produto UUID"
+//   4. Alfa: código alfanumérico impresso (ex: ZZVA6VNQYBGSRNF238)
+// ═══════════════════════════════════════════════════════
+function parsearQRInmetro(txt){
+  // Unificado com extrairIDlocal — mesma lógica
+  const t=(txt||'').trim();
+  let id=null,url=null,tipo='Conteúdo não reconhecido',tipoIco='fas fa-question-circle';
+
+  // 1. Após "produto" (mensagem WhatsApp INMETRO)
+  const mProd=t.match(/produto\s+([^\s]{6,})/i);
+  if(mProd){
+    id=mProd[1].replace(/[^a-zA-Z0-9\-]/g,'');
+    tipo='Mensagem WhatsApp — ID do Produto';
+    tipoIco='fab fa-whatsapp';
+  }
+  // 2. URL INMETRO
+  else if(/napalmadamao|inmpam\.gov|inmetro\.gov/i.test(t)){
+    const mUrl=t.match(/https?:\/\/[^\s]+/i);
+    if(mUrl){
+      url=mUrl[0];
+      const mU=url.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+      id=mU?mU[0]:url;
+    }
+    tipo='URL INMETRO — Verificação oficial';
+    tipoIco='fas fa-shield-alt';
+  }
+  // 3. UUID direto
+  else{
+    const mUuid=t.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+    if(mUuid){
+      id=mUuid[0];
+      tipo='QR Code com UUID (ID do Selo)';
+      tipoIco='fas fa-qrcode';
+    } else if(t.length>=8&&t.length<=40&&/^[A-Z0-9]+$/i.test(t.replace(/[-_]/g,''))){
+      id=t.toUpperCase();
+      tipo='Código Alfanumérico do Selo';
+      tipoIco='fas fa-font';
+    }
+  }
+  return{id,url,tipo,tipoIco};
+}
+
+function mostrarModalQR(txt,origem){
+  qrOrigem=origem||'etiqueta';
+  uuidAtual=null;
+  txt=txt.trim();
+  document.getElementById('mQRText').textContent=txt;
+
+  const parsed=parsearQRInmetro(txt);
+
+  // Tipo detectado
+  document.getElementById('mQRTipoIco').className=parsed.tipoIco;
+  document.getElementById('mQRTipoTxt').textContent=parsed.tipo;
+
+  // ID extraído
+  if(parsed.id){
+    uuidAtual=parsed.id;
+    document.getElementById('mQRUuidWrap').style.display='block';
+    document.getElementById('mQRNoUuid').classList.add('hidden');
+    document.getElementById('mQRUuidVal').textContent=parsed.id;
+    document.getElementById('mQRUsar').disabled=false;
+    document.getElementById('mQRUsar').style.opacity='1';
+  }else{
+    document.getElementById('mQRUuidWrap').style.display='none';
+    document.getElementById('mQRNoUuid').classList.remove('hidden');
+    document.getElementById('mQRUsar').disabled=true;
+    document.getElementById('mQRUsar').style.opacity='.5';
+  }
+
+  // Link INMETRO
+  if(parsed.url){
+    document.getElementById('mQRLinkWrap').classList.remove('hidden');
+    document.getElementById('mQRLink').href=parsed.url;
+    document.getElementById('mQRLinkTxt').textContent=parsed.url;
+  }else{
+    document.getElementById('mQRLinkWrap').classList.add('hidden');
+  }
+
+  document.getElementById('mQR').classList.remove('hidden');
+  // Se veio do scanner principal, busca na API em paralelo
+  if(origem==='scanner'&&parsed.id) handleQRCode(parsed.id);
+}
+window.fecharMQR=()=>{document.getElementById('mQR').classList.add('hidden');uuidAtual=null;};
+window.usarUUID=()=>{
+  if(!uuidAtual)return;
+  document.getElementById('etqId').value=uuidAtual;
+  document.getElementById('uuidOk').className='uuid-result ok';
+  document.getElementById('uuidVal').textContent=uuidAtual;
+  goPage('Etiqueta');goSub('nova');
+  drawCanvas();fecharMQR();
+  toast('ID adicionado!','success');
+};
+
+// ═══════════════════════════════════
+// UUID EXTRACT (paste)
+// ═══════════════════════════════════
+function extrairUUID(txt){
+  // Usa extrairIDlocal — lógica centralizada e unificada
+  const parsed = extrairIDlocal(txt) || parsearQRInmetro(txt);
+  const el=document.getElementById('uuidOk');
+  if(parsed && parsed.id){
+    el.className='uuid-result ok';
+    document.getElementById('uuidVal').textContent=parsed.id;
+    document.getElementById('etqId').value=parsed.id;
+    drawCanvas();
+    const tipoLabel = parsed.tipo==='MENSAGEM_WHATSAPP'?'WhatsApp':parsed.tipo==='UUID'?'UUID':parsed.tipo==='URL_INMETRO'?'URL INMETRO':'Código';
+    toast('ID extraído! (' + tipoLabel + ')','success');
+  }else if(txt.trim()){
+    el.className='uuid-result err';
+    document.getElementById('uuidVal').textContent='ID não encontrado — verifique o texto';
+    document.getElementById('etqId').value='';
+  }else{
+    el.className='uuid-result';
+    document.getElementById('etqId').value='';
+  }
+}
+
+// ═══════════════════════════════════
+// MANUAL CODE
+// ═══════════════════════════════════
+window.submitManual=function(){
+  const code=document.getElementById('manualCode').value.trim();
+  if(!code||code.length<6){toast('Insira o código impresso no selo','warning');return;}
+  // Trata código alfanumérico impresso no selo INMETRO
+  // Ex: ZZVA6VNQYBGSRNF238 — referência de contingência (Portaria 314/2025)
+  document.getElementById('manualCode').value='';
+  mostrarModalQR(code,'scanner');
+};
+
+// ═══════════════════════════════════
+// handleQRCode
+// ═══════════════════════════════════
+async function handleQRCode(qrData){
+  // Aceita tanto UUID quanto código alfanumérico do selo INMETRO
+  const re=/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+  const m=qrData.match(re);
+  // Se não for UUID, usa o valor bruto como ID (código alfanumérico)
+  const produtoId=m?m[0]:qrData.trim();
+  if(!produtoId){toast('ID não encontrado no QR Code','error');return;}
+  ultimoQR=produtoId;
+  document.getElementById('rIdDisp').textContent=produtoId;
+  document.getElementById('resultCard').classList.remove('hidden');
+  document.getElementById('ldMain').style.display='flex';
+  ['rExt','rCli'].forEach(x=>document.getElementById(x).textContent='...');
+  ['rEtqId','rNumExt','rClasse','rTipo','rKg','rVal','rRec','rLoc'].forEach(x=>document.getElementById(x).textContent='—');
+  await salvarProdutoID(produtoId);
+  if(!cfg.token||!cfg.tables.ext){
+    document.getElementById('rExt').textContent='API não configurada';
+    document.getElementById('rCli').textContent='—';
+    document.getElementById('ldMain').style.display='none';
     return;
   }
+  try{
+    const data=await buscarDados(produtoId);
+    if(data){
+      document.getElementById('rExt').textContent=data.nro||produtoId;
+      document.getElementById('rCli').textContent=data.cliNome||'N/I';
+      document.getElementById('rEtqId').textContent=produtoId;
+      document.getElementById('rNumExt').textContent=data.nro||'—';
+      document.getElementById('rClasse').textContent=data.classe||'—';
+      document.getElementById('rTipo').textContent=data.tipo||'—';
+      document.getElementById('rKg').textContent=data.kg||'—';
+      document.getElementById('rVal').textContent=data.val||'—';
+      document.getElementById('rRec').textContent=data.rec||'—';
+      document.getElementById('rLoc').textContent=data.local||'—';
+      addHist({id:produtoId,data:new Date().toLocaleString('pt-BR'),extintor:data.nro||produtoId,cliente:data.cliNome||'N/I',local:data.local||'—'});
+      toast('✅ ID extraído e salvo!','success');
+    }else{
+      document.getElementById('rExt').textContent='Não encontrado';
+      document.getElementById('rCli').textContent='—';
+      toast('Produto não encontrado','warning');
+    }
+  }catch(e){toast('Erro: '+e.message,'error');}
+  finally{document.getElementById('ldMain').style.display='none';}
+}
+window.consultarNov=()=>{if(ultimoQR)handleQRCode(ultimoQR);};
+window.limparResult=()=>{document.getElementById('resultCard').classList.add('hidden');ultimoQR=null;};
 
-  const origemIcon = { camera_vivo:'fas fa-video', foto_upload:'fas fa-image', manual:'fas fa-keyboard' };
+async function salvarProdutoID(id){
+  if(!cfg.token||!cfg.tables.etq)return;
+  try{
+    await fetch(cfg.url+'database/rows/table/'+cfg.tables.etq+'/?user_field_names=true',
+      {method:'POST',headers:{'Authorization':'Token '+cfg.token,'Content-Type':'application/json'},
+       body:JSON.stringify({'ID Etiqueta':id})});
+  }catch(e){console.warn('salvar ID:',e);}
+}
 
-  el.innerHTML = log.map((e, i) => {
-    const t   = new Date(e.ts).toLocaleString('pt-BR');
-    const a   = e.analise || {};
-    const ico = origemIcon[e.origem] || 'fas fa-circle';
-    const raw = e.raw || '';
-    const prev = raw.length > 100 ? raw.substring(0, 97) + '...' : raw;
+// ═══════════════════════════════════
+// API LOAD
+// ═══════════════════════════════════
+async function loadExt(){
+  if(!cfg.token||!cfg.tables.ext)return;
+  try{
+    const r=await fetch(cfg.url+'database/rows/table/'+cfg.tables.ext+'/?user_field_names=true&size=200',
+      {headers:{'Authorization':'Token '+cfg.token}});
+    if(r.ok){const d=await r.json();apiExt=d.results||[];toast(apiExt.length+' extintores carregados','success');}
+  }catch{}
+}
+async function loadCli(){
+  if(!cfg.token||!cfg.tables.cli)return;
+  try{
+    const r=await fetch(cfg.url+'database/rows/table/'+cfg.tables.cli+'/?user_field_names=true&size=200',
+      {headers:{'Authorization':'Token '+cfg.token}});
+    if(r.ok){const d=await r.json();apiCli=d.results||[];toast(apiCli.length+' clientes carregados','success');}
+  }catch{}
+}
 
-    let highlight = '';
-    if (a.serieCedula) highlight = `<div class="log-highlight"><i class="fas fa-tag"></i> Série: ${escHtml(a.serieCedula)}</div>`;
-    else if (a.codigoBCB) highlight = `<div class="log-highlight"><i class="fas fa-hashtag"></i> Cód. BCB: ${escHtml(a.codigoBCB)}</div>`;
-    else if (a.ean)       highlight = `<div class="log-highlight"><i class="fas fa-barcode"></i> EAN: ${escHtml(a.ean)}</div>`;
+// ═══════════════════════════════════
+// DROPDOWN CLIENTE
+// ═══════════════════════════════════
+function abrirDropCliente(){if(cliSel)return;filtrarCliente(document.getElementById('cliSearch').value);document.getElementById('cliList').classList.add('open');}
+function closeDropCli(){document.getElementById('cliList').classList.remove('open');}
+function filtrarCliente(q){
+  const list=document.getElementById('cliList');
+  list.classList.add('open');
+  if(!apiCli.length){
+    list.innerHTML='<div class="drop-empty"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+    loadCli().then(()=>filtrarCliente(q));return;
+  }
+  const t=q.trim().toLowerCase();
+  const its=apiCli.filter(c=>{const n=(c.Nome||c.nome||c.Cliente||'').toLowerCase();return !t||n.includes(t);}).slice(0,30);
+  if(!its.length){list.innerHTML='<div class="drop-empty">Nenhum cliente encontrado</div>';return;}
+  list.innerHTML=its.map(c=>{
+    const n=c.Nome||c.nome||c.Cliente||'ID '+c.id;
+    const d=c.CNPJ||c.CPF||c.Documento||'';
+    return `<div class="drop-opt" onclick="selCli(${c.id})"><div class="drop-opt-main">${n}</div>${d?`<div class="drop-opt-sub">${d}</div>`:''}</div>`;
+  }).join('');
+  document.getElementById('cliClear').style.display=q?'block':'none';
+}
+function selCli(id){
+  const c=apiCli.find(x=>x.id===id);if(!c)return;
+  cliSel=c;
+  const n=c.Nome||c.nome||c.Cliente||'ID '+c.id;
+  const d=c.CNPJ||c.CPF||c.Documento||'';
+  document.getElementById('cliSearch').value='';
+  document.getElementById('cliClear').style.display='none';
+  closeDropCli();
+  document.getElementById('cliChip').classList.remove('hidden');
+  document.getElementById('cliChipNome').textContent=n;
+  document.getElementById('cliChipSub').textContent=d||'Cliente selecionado';
+  drawCanvas();
+}
+function limparCliente(){
+  cliSel=null;
+  document.getElementById('cliSearch').value='';
+  document.getElementById('cliChip').classList.add('hidden');
+  closeDropCli();
+}
 
-    const fmtStyle = {
-      QR_CODE:'background:#E8F0FB;color:#1a3b5d', DATA_MATRIX:'background:#EDE9FE;color:#5b21b6',
-      CODE_128:'background:#FEF3C7;color:#92400e', CODE_39:'background:#FFF7ED;color:#c2410c',
-      AZTEC:'background:#ECFDF5;color:#065f46', PDF_417:'background:#EFF6FF;color:#1d4ed8',
-      EAN_13:'background:#F0FDF4;color:#166534', ITF:'background:#F0FDF4;color:#166534',
-      MANUAL_INPUT:'background:#F8FAFC;color:#6B7A8F'
-    }[e.formato] || 'background:#F8FAFC;color:#6B7A8F';
+// ═══════════════════════════════════
+// DROPDOWN EXTINTOR
+// ═══════════════════════════════════
+function abrirDropExtintor(){if(extSel)return;filtrarExtintor(document.getElementById('extSearch').value);document.getElementById('extList').classList.add('open');}
+function closeDropExt(){document.getElementById('extList').classList.remove('open');}
+function filtrarExtintor(q){
+  const list=document.getElementById('extList');
+  list.classList.add('open');
+  if(!apiExt.length){
+    list.innerHTML='<div class="drop-empty"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+    loadExt().then(()=>filtrarExtintor(q));return;
+  }
+  const t=q.trim().toLowerCase();
+  const its=apiExt.filter(e=>{
+    const nro=String(e['Nº Extintor']||e['N\u00ba Extintor']||e.id||'').toLowerCase();
+    const tipo=(e.Tipo||'').toLowerCase();
+    const loc=(e['Local Instalação']||e['Local Instala\u00e7\u00e3o']||'').toLowerCase();
+    return !t||nro.includes(t)||tipo.includes(t)||loc.includes(t);
+  }).slice(0,30);
+  if(!its.length){list.innerHTML='<div class="drop-empty">Nenhum extintor encontrado</div>';return;}
+  list.innerHTML=its.map(e=>{
+    const nro=e['Nº Extintor']||e['N\u00ba Extintor']||'ID '+e.id;
+    const tipo=e.Tipo||'';
+    const kg=e.Kg||e.kg||e.Carga||'';
+    const loc=e['Local Instalação']||e['Local Instala\u00e7\u00e3o']||'';
+    const kgF=kg?(String(kg).includes('kg')?kg:kg+' kg'):'';
+    return `<div class="drop-opt" onclick="selExt(${e.id})">
+      <div class="drop-opt-main">Ext. ${nro}${tipo?' — '+tipo:''}</div>
+      <div class="drop-opt-sub">${kgF?kgF+' · ':''}${loc||'Sem local'}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('extClear').style.display=q?'block':'none';
+}
+function selExt(id){
+  const e=apiExt.find(x=>x.id===id);if(!e)return;
+  extSel=e;
+  const nro=e['Nº Extintor']||e['N\u00ba Extintor']||'ID '+e.id;
+  const tipo=e.Tipo||'';
+  const kg=e.Kg||e.kg||e.Carga||'';
+  const loc=e['Local Instalação']||e['Local Instala\u00e7\u00e3o']||'';
+  const cls=e.Classe||'';
+  const val=fmtData(e['Data da Validade']||e.Validade||'');
+  const rec=fmtData(e['Data da Recarga']||e.Recarga||'');
+  const kgF=kg?(String(kg).includes('kg')?kg:kg+' kg'):'—';
+  document.getElementById('extSearch').value='';
+  document.getElementById('extClear').style.display='none';
+  closeDropExt();
+  document.getElementById('extChip').classList.remove('hidden');
+  document.getElementById('extChipNome').textContent='Ext. '+nro+(tipo?' — '+tipo:'');
+  document.getElementById('extChipSub').textContent=(kgF!=='—'?kgF+' · ':'')+( loc||'Sem local');
+  document.getElementById('extDetalhe').classList.remove('hidden');
+  document.getElementById('edClasse').textContent=cls||'—';
+  document.getElementById('edTipo').textContent=tipo||'—';
+  document.getElementById('edKg').textContent=kgF;
+  document.getElementById('edVal').textContent=val||'—';
+  document.getElementById('edRec').textContent=rec||'—';
+  document.getElementById('etqLocal').value=loc||'';
+  document.getElementById('etqLocalManual').value=loc||'';
+  drawCanvas();
+}
+function limparExtintor(){
+  extSel=null;
+  document.getElementById('extSearch').value='';
+  document.getElementById('extChip').classList.add('hidden');
+  document.getElementById('extDetalhe').classList.add('hidden');
+  closeDropExt();
+  document.getElementById('etqLocal').value='';
+  document.getElementById('etqLocalManual').value='';
+}
 
-    return `<div class="log-row">
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
-        <span style="padding:2px 8px;border-radius:20px;font-size:.62rem;font-weight:700;${fmtStyle}">${e.formato}</span>
-        <i class="${ico}" style="font-size:.7rem;color:var(--muted);"></i>
-        <span class="log-ts">${t}</span>
-        <span style="margin-left:auto;font-size:.62rem;color:var(--muted);">${a.comprimento||0}c</span>
-        <button class="btn-copy" onclick="copiarEntrada(${i})"><i class="fas fa-copy"></i></button>
+function toggleLocalManual(){
+  localManual=!localManual;
+  document.getElementById('localManualWrap').classList.toggle('hidden',!localManual);
+}
+function getLocal(){
+  return localManual?document.getElementById('etqLocalManual').value.trim():document.getElementById('etqLocal').value.trim();
+}
+
+// ═══════════════════════════════════
+// BUSCAR DADOS (scanner)
+// ═══════════════════════════════════
+async function buscarDados(etqId){
+  let extObj=null,cliId=null,local='—',etqIdF=etqId;
+  if(cfg.tables.etq){
+    try{
+      const r=await fetch(cfg.url+'database/rows/table/'+cfg.tables.etq+'/?user_field_names=true&filters__ID%20Etiqueta__equal='+encodeURIComponent(etqId),
+        {headers:{'Authorization':'Token '+cfg.token}});
+      if(r.ok){const d=await r.json();if(d.results&&d.results.length>0){
+        const etq=d.results[0];
+        cliId=etq.Cliente||etq.clienteId;
+        local=etq['Local Instala\u00e7\u00e3o']||etq['Local Instalação']||'—';
+        etqIdF=etq['ID Etiqueta']||etqId;
+        if(etq.Extintor){
+          const r2=await fetch(cfg.url+'database/rows/table/'+cfg.tables.ext+'/?user_field_names=true&filters__N%C2%BA%20Extintor__equal='+encodeURIComponent(etq.Extintor),
+            {headers:{'Authorization':'Token '+cfg.token}});
+          if(r2.ok){const d2=await r2.json();if(d2.results&&d2.results.length>0)extObj=d2.results[0];}
+        }
+      }}
+    }catch{}
+  }
+  if(!extObj){
+    const r=await fetch(cfg.url+'database/rows/table/'+cfg.tables.ext+'/?user_field_names=true&filters__N%C2%BA%20Extintor__equal='+encodeURIComponent(etqId),
+      {headers:{'Authorization':'Token '+cfg.token}});
+    if(r.ok){const d=await r.json();if(d.results&&d.results.length>0)extObj=d.results[0];}
+  }
+  if(!extObj)return null;
+  const kgR=extObj.Kg||extObj.kg||extObj.Carga||'';
+  const kg=kgR?(String(kgR).includes('kg')?kgR:kgR+' kg'):'—';
+  const res={nro:extObj['N\u00ba Extintor']||extObj['Nº Extintor']||extObj.id||'—',classe:extObj.Classe||'—',tipo:extObj.Tipo||'—',kg,val:fmtData(extObj['Data da Validade']||extObj.Validade||''),rec:fmtData(extObj['Data da Recarga']||extObj.Recarga||''),cliId,cliNome:null,local,etqId:etqIdF};
+  if(cliId){
+    try{const r=await fetch(cfg.url+'database/rows/table/'+cfg.tables.cli+'/'+cliId+'/?user_field_names=true',{headers:{'Authorization':'Token '+cfg.token}});
+      if(r.ok){const d=await r.json();res.cliNome=d.Nome||d.nome||d.Cliente||'N/I';}}catch{}
+  }
+  return res;
+}
+
+// ═══════════════════════════════════
+// SALVAR ETIQUETA
+// ═══════════════════════════════════
+window.salvarEtiqueta=async function(){
+  const id=document.getElementById('etqId').value.trim();
+  const local=getLocal();
+  if(!id){toast('Escaneie o QR Code para obter o ID','warning');return;}
+  if(!cliSel){toast('Selecione um cliente','warning');return;}
+  if(!extSel){toast('Selecione um extintor','warning');return;}
+
+  // Pega código do selo
+  const seloInfo=getSeloAtual();
+  const codigoSelo=seloInfo.codigo||'';
+
+  const btn=document.getElementById('btnSalvarEtq');
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Salvando...';
+  const nroExt=extSel['Nº Extintor']||extSel['Nº Extintor']||String(extSel.id);
+  const nroCli=cliSel.Nome||cliSel.nome||cliSel.Cliente||String(cliSel.id);
+  const kgR=extSel.Kg||extSel.kg||extSel.Carga||'';
+  const kg=kgR?(String(kgR).includes('kg')?kgR:kgR+' kg'):'';
+  const agora=new Date().toLocaleString('pt-BR');
+  const obj={id,extintor:nroExt,cliente:nroCli,clienteId:cliSel.id,extintorId:extSel.id,local,kg,
+    classe:extSel.Classe||'',tipo:extSel.Tipo||'',
+    validade:extSel['Data da Validade']||extSel.Validade||'',
+    recarga:extSel['Data da Recarga']||extSel.Recarga||'',
+    codigoSelo,dataCriacao:agora};
+  const idx=etqs.findIndex(e=>e.id===id);
+  if(idx>=0)etqs[idx]=obj;else etqs.unshift(obj);
+  localStorage.setItem('pci_etqs',JSON.stringify(etqs));
+
+  let ok=false;
+  if(cfg.token&&cfg.tables.etq){
+    try{
+      const payload={
+        'ID Etiqueta':id,'Extintor':nroExt,'Cliente':String(cliSel.id),
+        'Local Instalação':local,'Kg':kg,
+        'Classe':extSel.Classe||'','Tipo':extSel.Tipo||'',
+        'Data da Validade':extSel['Data da Validade']||extSel.Validade||null,
+        'Data da Recarga':extSel['Data da Recarga']||extSel.Recarga||null,
+        'Codigo Selo':codigoSelo,'Selo M1':codigoSelo
+      };
+      const r=await fetch(cfg.url+'database/rows/table/'+cfg.tables.etq+'/?user_field_names=true',
+        {method:'POST',headers:{'Authorization':'Token '+cfg.token,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      ok=r.ok;
+    }catch{}
+  }
+
+  // Marcar selo como usado no Baserow
+  if(ok && seloInfo.rowId && cfg.token && cfg.tables.selos){
+    try{
+      await fetch(cfg.url+'database/rows/table/'+cfg.tables.selos+'/'+seloInfo.rowId+'/?user_field_names=true',
+        {method:'PATCH',headers:{'Authorization':'Token '+cfg.token,'Content-Type':'application/json'},
+         body:JSON.stringify({
+           'Status':'usado','ID Etiqueta Vinculada':id,
+           'Cliente':nroCli,'Data Vinculacao':agora
+         })});
+      // Atualiza contagem usados no lote
+      if(seloInfo.loteId&&cfg.tables.lotes){
+        const loteRow=apiLotes.find(l=>String(l.id)===String(seloInfo.loteId));
+        if(loteRow){
+          const novosUsados=(parseInt(loteRow.Usados||0))+1;
+          await fetch(cfg.url+'database/rows/table/'+cfg.tables.lotes+'/'+loteRow.id+'/?user_field_names=true',
+            {method:'PATCH',headers:{'Authorization':'Token '+cfg.token,'Content-Type':'application/json'},
+             body:JSON.stringify({'Usados':novosUsados})});
+          loteRow.Usados=novosUsados;
+        }
+      }
+      // Marca sel local como usado
+      const seloIdx=apiSelos.findIndex(s=>String(s.id)===String(seloInfo.rowId));
+      if(seloIdx>-1)apiSelos[seloIdx].Status='usado';
+      toast('Etiqueta salva e selo marcado como usado!','success');
+    }catch{toast(ok?'Etiqueta salva!':'Salvo localmente!','success');}
+  }else{
+    toast(ok?'Etiqueta salva na API!':'Salvo localmente!','success');
+  }
+
+  btn.disabled=false;btn.innerHTML='<i class="fas fa-save"></i> Salvar Etiqueta';
+  // Reseta campo selo
+  seloSel=null;
+  ['seloLoteSelect','seloItemSelect'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const disp=document.getElementById('seloLoteDisplay');if(disp)disp.textContent='';
+  drawCanvas();renderListaEtq();
+};
+
+// ═══════════════════════════════════
+// EXTINTOR
+// ═══════════════════════════════════
+function fmtKg(inp){
+  const v=inp.value.trim();
+  document.getElementById('kgSuf').style.display=(v&&!isNaN(v)&&Number(v)>0)?'block':'none';
+  document.getElementById('kgPrev').style.display=(v&&!isNaN(v)&&Number(v)>0)?'block':'none';
+  if(v&&!isNaN(v)&&Number(v)>0)document.getElementById('kgPrev').textContent='→ '+v+' kg';
+}
+window.salvarExtintor=async function(){
+  const nro=document.getElementById('nNro').value.trim();
+  if(!nro){toast('Informe o Nº do Extintor','warning');return;}
+  const kgV=document.getElementById('nKg').value.trim();
+  const kg=(kgV&&!isNaN(kgV)&&Number(kgV)>0)?kgV+' kg':kgV;
+  const payload={'N\u00ba Extintor':nro,'Classe':document.getElementById('nClasse').value,'Tipo':document.getElementById('nTipo').value,'Kg':kg,'Data da Validade':document.getElementById('nVal').value||null,'Data da Recarga':document.getElementById('nRec').value||null,'Local Instala\u00e7\u00e3o':document.getElementById('nLocal').value.trim()};
+  const btn=document.getElementById('btnSalvExt');
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Salvando...';
+  let ok=false;
+  if(cfg.token&&cfg.tables.ext){
+    try{
+      const r=await fetch(cfg.url+'database/rows/table/'+cfg.tables.ext+'/?user_field_names=true',{method:'POST',headers:{'Authorization':'Token '+cfg.token,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      if(r.ok){ok=true;const n=await r.json();apiExt.unshift(n);}
+    }catch{}
+  }
+  btn.disabled=false;btn.innerHTML='<i class="fas fa-save"></i> Salvar Extintor';
+  if(ok){toast('Extintor salvo!','success');['nNro','nKg','nVal','nRec','nLocal'].forEach(x=>document.getElementById(x).value='');document.getElementById('nClasse').value='';document.getElementById('nTipo').value='';document.getElementById('kgSuf').style.display='none';document.getElementById('kgPrev').style.display='none';}
+  else toast('Sem conexão API — verifique configurações','warning');
+};
+
+// ═══════════════════════════════════
+// LISTA ETIQUETAS
+// ═══════════════════════════════════
+function renderListaEtq(){
+  const el=document.getElementById('listaEtq');
+  if(!etqs.length){el.innerHTML='<div class="empty"><i class="fas fa-tag"></i><p>Nenhuma etiqueta</p></div>';return;}
+  el.innerHTML=etqs.map((e,i)=>`
+    <div class="list-item" onclick="loadEtiqueta(${i})">
+      <div class="list-icon"><i class="fas fa-tag"></i></div>
+      <div class="list-body">
+        <div class="list-title">Ext. ${e.extintor||'—'} &bull; ${e.cliente||'—'}</div>
+        <div class="list-sub">${e.local||'Sem local'}${e.kg?' &bull; '+e.kg:''}</div>
+        <div class="list-id">${e.id}</div>
       </div>
-      <div class="log-raw">${escHtml(prev)}</div>
-      ${highlight}
-      <div class="log-meta">tipo: ${a.tipo||'?'} · padrões: ${(a.padroes||[]).join(', ')||'nenhum'}</div>
+      <div class="list-meta">
+        <span class="badge">${(e.dataCriacao||'').split(',')[0]||'—'}</span>
+        <button class="del-btn" onclick="event.stopPropagation();remEtq(${i})"><i class="fas fa-trash-alt"></i></button>
+      </div>
+    </div>`).join('');
+}
+window.loadEtiqueta=function(i){
+  const e=etqs[i];if(!e)return;
+  document.getElementById('etqId').value=e.id;
+  document.getElementById('uuidOk').className='uuid-result ok';
+  document.getElementById('uuidVal').textContent=e.id;
+  if(e.clienteId){const c=apiCli.find(x=>x.id===e.clienteId);if(c)selCli(c.id);}
+  else if(e.cliente){const c=apiCli.find(x=>(x.Nome||x.nome||x.Cliente||'')===e.cliente);if(c)selCli(c.id);}
+  if(e.extintorId){const x=apiExt.find(x=>x.id===e.extintorId);if(x)selExt(x.id);}
+  else if(e.extintor){const x=apiExt.find(x=>(x['N\u00ba Extintor']||x['Nº Extintor']||'')===e.extintor);if(x)selExt(x.id);}
+  goSub('nova');drawCanvas();toast('Etiqueta carregada!','success');
+};
+window.remEtq=function(i){
+  document.getElementById('mConfMsg').textContent='Remover esta etiqueta?';
+  document.getElementById('mConfOk').onclick=()=>{etqs.splice(i,1);localStorage.setItem('pci_etqs',JSON.stringify(etqs));renderListaEtq();fecharMConf();toast('Removida!','success');};
+  document.getElementById('mConf').classList.remove('hidden');
+};
+window.carregarEtiquetasAPI=async function(){
+  if(!cfg.token||!cfg.tables.etq){toast('Configure a tabela Etiquetas','warning');return;}
+  toast('Carregando...','info');
+  try{
+    const r=await fetch(cfg.url+'database/rows/table/'+cfg.tables.etq+'/?user_field_names=true&size=50&order_by=-id',{headers:{'Authorization':'Token '+cfg.token}});
+    if(r.ok){const d=await r.json();if(d.results&&d.results.length>0){
+      d.results.forEach(row=>{const id=String(row['ID Etiqueta']||row.id);const obj={id,extintor:row.Extintor||'',cliente:row.Cliente||'',local:row['Local Instala\u00e7\u00e3o']||row['Local Instalação']||'',kg:row.Kg||'',dataCriacao:new Date().toLocaleString('pt-BR')};const idx=etqs.findIndex(e=>e.id===id);if(idx<0)etqs.unshift(obj);else etqs[idx]=obj;});
+      localStorage.setItem('pci_etqs',JSON.stringify(etqs));renderListaEtq();
+      toast(d.results.length+' etiquetas!','success');
+    }else toast('Nenhuma na API','info');}
+  }catch{toast('Erro ao carregar','error');}
+};
+
+// ═══════════════════════════════════
+// CANVAS 33x22mm @ 300dpi
+// ═══════════════════════════════════
+function drawCanvas(){
+  const cv=document.getElementById('etqCanvas'),ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  const id=document.getElementById('etqId').value.trim();
+  const extNro=extSel?(extSel['N\u00ba Extintor']||extSel['Nº Extintor']||''):'';
+  const cli=cliSel?(cliSel.Nome||cliSel.nome||cliSel.Cliente||''):'';
+  const loc=getLocal();
+  const kgR=extSel?(extSel.Kg||extSel.kg||extSel.Carga||''):'';
+  const kg=kgR?(String(kgR).includes('kg')?kgR:kgR+' kg'):'';
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+  if(!id&&!extNro){ctx.fillStyle='#B8C8D8';ctx.font='13px Inter,sans-serif';ctx.textAlign='center';ctx.fillText('Preencha os dados para visualizar',W/2,H/2);return;}
+  ctx.strokeStyle='#1E3B5A';ctx.lineWidth=6;ctx.strokeRect(3,3,W-6,H-6);
+  ctx.fillStyle='#1E3B5A';ctx.fillRect(3,3,W-6,54);
+  ctx.fillStyle='#fff';ctx.font='bold 18px Inter,sans-serif';ctx.textAlign='left';ctx.fillText('PCI',16,30);
+  ctx.font='10px Inter,sans-serif';ctx.fillText('Sistema de Extintores',16,46);
+  let y=72;
+  const r=(l,v,x2)=>{ctx.fillStyle='#6B7A8F';ctx.font='9px Inter,sans-serif';ctx.textAlign='left';ctx.fillText(l,x2||14,y);ctx.fillStyle='#13293D';ctx.font='bold 11px Inter,sans-serif';const vv=String(v||'—');ctx.fillText(vv.length>24?vv.substring(0,22)+'…':vv,x2||14,y+13);};
+  r('ID:',id);y+=30;
+  r('Extintor:',extNro?'Ext. '+extNro:'—');r('Cliente:',cli,W/2);y+=28;
+  r('Local:',loc);r('Carga:',kg||'—',W/2);
+  ctx.fillStyle='#E4EAF0';ctx.fillRect(3,H-24,W-6,21);
+  ctx.fillStyle='#6B7A8F';ctx.font='9px Inter,sans-serif';ctx.textAlign='center';ctx.fillText('33\u00d722mm \u00b7 300dpi \u00b7 PCI Scanner v5.0',W/2,H-9);
+}
+
+window.gerarEtiqueta=function(){
+  const id=document.getElementById('etqId').value.trim();
+  if(!id){toast('ID necessário','warning');return;}
+  if(!extSel){toast('Selecione um extintor','warning');return;}
+  drawCanvas();
+  const src=document.getElementById('etqCanvas');
+  const out=document.createElement('canvas');out.width=394;out.height=264;
+  out.getContext('2d').drawImage(src,0,0,394,264);
+  out.toBlob(blob=>{const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download='etiqueta_'+id.substring(0,8)+'_300dpi.png';a.click();URL.revokeObjectURL(u);toast('Etiqueta gerada!','success');},'image/png');
+};
+
+// ═══════════════════════════════════
+// HISTÓRICO
+// ═══════════════════════════════════
+function addHist(item){hist.unshift(item);if(hist.length>30)hist=hist.slice(0,30);localStorage.setItem('pci_hist',JSON.stringify(hist));renderHist();}
+function renderHist(){
+  const el=document.getElementById('histLista');
+  if(!hist.length){el.innerHTML='<div class="empty"><i class="fas fa-qrcode"></i><p>Nenhuma leitura</p></div>';return;}
+  el.innerHTML=hist.map((h,i)=>`
+    <div class="hist-item">
+      <button class="hist-del" onclick="remHist(${i})"><i class="fas fa-trash-alt"></i></button>
+      <div class="hist-header">
+        <span class="hist-id">${h.id.length>28?h.id.substring(0,26)+'…':h.id}</span>
+        <span class="hist-date">${h.data}</span>
+      </div>
+      <div class="hist-grid">
+        <div class="hist-cell"><div class="hc-lbl">Extintor</div><div class="hc-val">${h.extintor}</div></div>
+        <div class="hist-cell"><div class="hc-lbl">Cliente</div><div class="hc-val">${h.cliente}</div></div>
+        <div class="hist-cell full"><div class="hc-lbl">Local</div><div class="hc-val">${h.local}</div></div>
+      </div>
+    </div>`).join('');
+}
+window.remHist=function(i){
+  document.getElementById('mConfMsg').textContent='Remover este item do histórico?';
+  document.getElementById('mConfOk').onclick=()=>{hist.splice(i,1);localStorage.setItem('pci_hist',JSON.stringify(hist));renderHist();fecharMConf();toast('Removido!','success');};
+  document.getElementById('mConf').classList.remove('hidden');
+};
+window.confirmarLimpar=function(){
+  if(!hist.length){toast('Histórico vazio','info');return;}
+  document.getElementById('mConfMsg').textContent='Limpar todo o histórico?';
+  document.getElementById('mConfOk').onclick=()=>{hist=[];localStorage.setItem('pci_hist',JSON.stringify(hist));renderHist();fecharMConf();toast('Limpo!','success');};
+  document.getElementById('mConf').classList.remove('hidden');
+};
+
+// ═══════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════
+function loadCfg(){
+  const s=localStorage.getItem('pci_cfg');if(s){try{cfg=JSON.parse(s);}catch{}}
+  document.getElementById('cfgUrl').value=cfg.url;
+  document.getElementById('cfgToken').value=cfg.token;
+  document.getElementById('cfgTblExt').value=cfg.tables.ext;
+  document.getElementById('cfgTblCli').value=cfg.tables.cli;
+  document.getElementById('cfgTblEtq').value=cfg.tables.etq;
+  const lEl=document.getElementById('cfgTblLotes'); if(lEl) lEl.value=cfg.tables.lotes||'';
+  const sEl=document.getElementById('cfgTblSelos'); if(sEl) sEl.value=cfg.tables.selos||'';
+  document.getElementById('cfgAnthropicKey').value=cfg.anthropicKey||'';
+  checkConn();
+}
+window.salvarCfg=function(){
+  const lEl2=document.getElementById('cfgTblLotes');
+  const sEl2=document.getElementById('cfgTblSelos');
+  cfg={
+    url:document.getElementById('cfgUrl').value,
+    token:document.getElementById('cfgToken').value,
+    anthropicKey:document.getElementById('cfgAnthropicKey').value.trim(),
+    tables:{
+      ext:document.getElementById('cfgTblExt').value,
+      cli:document.getElementById('cfgTblCli').value,
+      etq:document.getElementById('cfgTblEtq').value,
+      lotes:lEl2?lEl2.value:'',
+      selos:sEl2?sEl2.value:''
+    }
+  };
+  localStorage.setItem('pci_cfg',JSON.stringify(cfg));
+  toast('Configurações salvas!','success');checkConn();loadExt();loadCli();
+};
+
+// Testar Groq
+window.testarIA=async function(){
+  if(!cfg.anthropicKey){toast('Informe a chave Groq (gsk_...)','error');return;}
+  toast('Testando Groq...','info');
+  try{
+    const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.anthropicKey},
+      body:JSON.stringify({model:'llama-3.1-8b-instant',max_tokens:10,messages:[{role:'user',content:'OK?'}]})
+    });
+    if(r.ok){ toast('⚡ Groq OK! Ultra-rápido.','success'); }
+    else{ const e=await r.json(); toast('Erro Groq: '+(e.error?.message||r.status),'error'); }
+  }catch(e){ toast('Erro de rede: '+e.message,'error'); }
+};
+window.testarAPI=async function(){
+  if(!cfg.token){toast('Token não configurado','error');return;}
+  toast('Testando...','info');
+  try{
+    const r=await fetch(cfg.url+'database/rows/table/'+(cfg.tables.ext||'1')+'/?user_field_names=true&size=1',{headers:{'Authorization':'Token '+cfg.token}});
+    setConn(r.ok);toast(r.ok?'Conexão OK!':'Falha na conexão',r.ok?'success':'error');
+  }catch{toast('Erro de rede','error');}
+};
+async function checkConn(){
+  if(!cfg.token)return;
+  try{
+    const r=await fetch(cfg.url+'database/rows/table/'+(cfg.tables.ext||'1')+'/?user_field_names=true&size=1',{headers:{'Authorization':'Token '+cfg.token}});
+    setConn(r.ok);
+  }catch{setConn(false);}
+}
+function setConn(on){
+  const d=document.getElementById('connDot'),l=document.getElementById('connLabel');
+  d.classList.toggle('on',on);l.textContent=on?'Online':'Offline';
+}
+
+// ═══════════════════════════════════
+// MODAL CONFIRM
+// ═══════════════════════════════════
+window.fecharMConf=()=>document.getElementById('mConf').classList.add('hidden');
+
+// ═══════════════════════════════════
+// TOAST
+// ═══════════════════════════════════
+function toast(msg,tipo='info'){
+  if(ntTimer)clearTimeout(ntTimer);
+  const el=document.getElementById('toast'),ico=document.getElementById('toastIco');
+  document.getElementById('toastMsg').textContent=msg;
+  ico.className=tipo==='success'?'fas fa-check-circle':tipo==='error'?'fas fa-times-circle':tipo==='warning'?'fas fa-exclamation-triangle':'fas fa-info-circle';
+  el.className='toast '+tipo+' show';
+  ntTimer=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOTES DE SELOS — carrega do Baserow
+// ═══════════════════════════════════════════════════════════
+async function loadLotes(){
+  const el=document.getElementById('lotesLista');
+  if(!cfg.token||!cfg.tables.lotes){
+    el.innerHTML='<div class="empty"><i class="fas fa-tags"></i><p>Configure as tabelas de Lotes em Config</p></div>';
+    return;
+  }
+  el.innerHTML='<div class="empty"><i class="fas fa-spinner fa-spin"></i><p>Carregando...</p></div>';
+  try{
+    const r=await fetch(cfg.url+'database/rows/table/'+cfg.tables.lotes+'/?user_field_names=true&size=50',
+      {headers:{'Authorization':'Token '+cfg.token}});
+    if(r.ok){
+      const d=await r.json();
+      apiLotes=d.results||[];
+      renderLotesLista();
+      // Também carrega selos
+      if(cfg.tables.selos) await loadSelos();
+    }else{
+      el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Erro ao carregar</p></div>';
+    }
+  }catch(e){el.innerHTML='<div class="empty"><i class="fas fa-wifi"></i><p>Sem conexão</p></div>';}
+}
+
+async function loadSelos(){
+  if(!cfg.token||!cfg.tables.selos) return;
+  try{
+    const r=await fetch(cfg.url+'database/rows/table/'+cfg.tables.selos+'/?user_field_names=true&size=500',
+      {headers:{'Authorization':'Token '+cfg.token}});
+    if(r.ok){const d=await r.json();apiSelos=d.results||[];}
+  }catch{}
+}
+
+function renderLotesLista(){
+  const el=document.getElementById('lotesLista');
+  if(!apiLotes.length){
+    el.innerHTML='<div class="empty"><i class="fas fa-tags"></i><p>Nenhum lote cadastrado</p></div>';
+    return;
+  }
+  el.innerHTML=apiLotes.map(l=>{
+    const nome=l['Nome Lote']||l.nome||l.Nome||'Lote '+l.id;
+    const total=parseInt(l.Total||0);
+    const usados=parseInt(l.Usados||0);
+    const disp=total-usados;
+    const pct=total>0?Math.round(usados/total*100):0;
+    const cor=disp<=Math.ceil(total/8)?'#e53935':disp<=Math.ceil(total/4)?'#f0a500':'#1a7c3e';
+    return `<div class="card" style="margin-bottom:10px;padding:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <div style="font-weight:700;font-size:.86rem;color:#13293D;">${nome}</div>
+          <div style="font-size:.7rem;color:#6B7A8F;margin-top:2px;">
+            ${l.Prefixo?'Prefixo: <strong>'+l.Prefixo+'</strong> · ':''}
+            ${l.Inicio||''}–${l.Final||''}
+          </div>
+        </div>
+        <span style="background:${disp<=0?'#ffe5e5':'#dff0e4'};color:${disp<=0?'#c11f2f':'#0e6832'};padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:700;">
+          ${disp} disponíveis
+        </span>
+      </div>
+      <div style="background:#f0f4f8;border-radius:6px;height:6px;margin-bottom:6px;">
+        <div style="background:${cor};height:6px;border-radius:6px;width:${pct}%;transition:.3s;"></div>
+      </div>
+      <div style="font-size:.7rem;color:#6B7A8F;">${usados}/${total} usados · ${pct}%</div>
     </div>`;
   }).join('');
 }
 
-function salvarLog()       { localStorage.setItem('bcb_scanner_log', JSON.stringify(log)); }
-function atualizarBadgeLog(){ document.getElementById('logBadge').textContent = log.length; document.getElementById('logTotal').textContent = log.length; }
-function limparLog()       {
-  if (!confirm('Limpar todo o log?')) return;
-  log = []; salvarLog(); atualizarBadgeLog(); renderLog();
-  notif('Log limpo', 'success');
-}
-function exportarLog()     {
-  if (!log.length) { notif('Log vazio', 'warning'); return; }
-  baixar(JSON.stringify(log, null, 2), 'bcb_cedulas_' + hoje() + '.json', 'application/json');
-  notif('Exportado: ' + log.length + ' leituras', 'success');
-}
-function exportarTxt()     {
-  if (!log.length) { notif('Log vazio', 'warning'); return; }
-  const txt = log.map(e =>
-    `[${new Date(e.ts).toLocaleString('pt-BR')}] FMT:${e.formato} ORIGEM:${e.origem}\n` +
-    `RAW: ${e.raw}\n` +
-    `SERIE: ${e.analise?.serieCedula||'-'} | BCB: ${e.analise?.codigoBCB||'-'} | TIPO: ${e.analise?.tipo||'-'}\n` +
-    `PADROES: ${(e.analise?.padroes||[]).join(', ')||'nenhum'}\n` +
-    '─'.repeat(60)
-  ).join('\n');
-  baixar(txt, 'bcb_cedulas_' + hoje() + '.txt', 'text/plain;charset=utf-8');
-  notif('Exportado TXT', 'success');
-}
-function hoje()   { return new Date().toISOString().slice(0,10); }
-function baixar(content, filename, type) {
-  const blob = new Blob([content], { type });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
+// Preenche select de lotes na aba Etiqueta
+function seloPreencherLoteSelect(){
+  const sel=document.getElementById('seloLoteSelect');
+  if(!sel)return;
+  sel.innerHTML='<option value="">Selecione o Lote</option>';
+  apiLotes.forEach(l=>{
+    const nome=l['Nome Lote']||l.Nome||'Lote '+l.id;
+    const total=parseInt(l.Total||0);
+    const usados=parseInt(l.Usados||0);
+    const disp=total-usados;
+    sel.innerHTML+=`<option value="${l.id}">${nome} (${disp} disponíveis)</option>`;
+  });
 }
 
-function copiarUltimo()      { copiarTxt(ultimoRaw); }
-function copiarUltimoFoto()  { copiarTxt(ultimoFoto); }
-function copiarEntrada(i)    { copiarTxt(log[i]?.raw || ''); }
-function copiarTxt(txt)      {
-  navigator.clipboard?.writeText(txt)
-    .then(() => notif('Copiado!', 'success'))
-    .catch(() => notif('Erro ao copiar', 'warning'));
+window.seloLoteCarregarSelos=function(loteId){
+  const sel=document.getElementById('seloItemSelect');
+  if(!sel)return;
+  sel.innerHTML='<option value="">Selecione o Selo</option>';
+  if(!loteId) return;
+  const dispSelosDoLote=apiSelos.filter(s=>{
+    const lid=s['Lote ID']||s.loteId||'';
+    return String(lid)===String(loteId)&&(s.Status||s.status||'disponivel')==='disponivel';
+  });
+  dispSelosDoLote.forEach(s=>{
+    const cod=s['Codigo Selo']||s.codigoSelo||s.codigo||'';
+    sel.innerHTML+=`<option value="${s.id}">${cod}</option>`;
+  });
+  if(!dispSelosDoLote.length){
+    sel.innerHTML='<option value="" disabled>Nenhum selo disponível neste lote</option>';
+  }
+};
+
+window.seloSelecionarItem=function(seloRowId){
+  const disp=document.getElementById('seloLoteDisplay');
+  if(!seloRowId){seloSel=null;if(disp)disp.textContent='';return;}
+  const s=apiSelos.find(x=>String(x.id)===String(seloRowId));
+  if(s){
+    seloSel=s;
+    const cod=s['Codigo Selo']||s.codigoSelo||'';
+    if(disp)disp.textContent='✅ Selo selecionado: '+cod;
+  }
+};
+
+window.seloTrocarOrigem=function(v){
+  document.getElementById('seloOrigemLote').style.display    = v==='lote'   ?'block':'none';
+  document.getElementById('seloOrigemScanner').style.display = v==='scanner'?'block':'none';
+  document.getElementById('seloOrigemManual').style.display  = v==='manual' ?'block':'none';
+  const onS  ='display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border-radius:30px;border:1.5px solid #1E3B5A;background:#EEF3FA;font-size:.76rem;font-weight:600;color:#1E3B5A;';
+  const offS ='display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border-radius:30px;border:1.5px solid #E4EAF0;background:#fff;font-size:.76rem;font-weight:600;color:#6B7A8F;';
+  const idMap={lote:'slblLote',scanner:'sblrScanner',manual:'sblrManual'};
+  Object.entries(idMap).forEach(([k,id])=>{const el=document.getElementById(id);if(el)el.style.cssText=k===v?onS:offS;});
+  if(v==='scanner'){pendSeloParaEtq=true;}
+};
+
+function getSeloAtual(){
+  const orig=(document.querySelector('input[name="seloOrigem"]:checked')||{}).value||'lote';
+  if(orig==='lote'&&seloSel){
+    return {codigo:seloSel['Codigo Selo']||seloSel.codigoSelo||'', rowId:seloSel.id, loteId:seloSel['Lote ID']||seloSel.loteId};
+  }
+  if(orig==='scanner'){
+    const v=(document.getElementById('seloCodigoInput')||{}).value||'';
+    return {codigo:v.trim(),rowId:null,loteId:null};
+  }
+  if(orig==='manual'){
+    const v=(document.getElementById('seloManualInput')||{}).value||'';
+    return {codigo:v.trim(),rowId:null,loteId:null};
+  }
+  return {codigo:'',rowId:null,loteId:null};
 }
 
-// ═══════════════════ UTILS ═══════════════════
-function escHtml(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// ═══════════════════════════════════════════════════════════
+// CAPTURA FOTO SELO INMETRO — Aba Lotes
+// ═══════════════════════════════════════════════════════════
+function seloGoTab(t){
+  document.getElementById('seloPaneCam').style.display    = t==='cam'   ?'block':'none';
+  document.getElementById('seloPaneUpload').style.display = t==='upload'?'block':'none';
+  const onS ='flex:1;padding:9px;border-radius:10px;border:1.5px solid #1E3B5A;background:#1E3B5A;color:#fff;font-size:.76rem;font-weight:600;cursor:pointer;';
+  const offS='flex:1;padding:9px;border-radius:10px;border:1.5px solid #E4EAF0;background:#fff;color:#6B7A8F;font-size:.76rem;font-weight:600;cursor:pointer;';
+  const tc=document.getElementById('seloTabCam'); if(tc) tc.style.cssText=t==='cam'?onS:offS;
+  const tu=document.getElementById('seloTabUpload'); if(tu) tu.style.cssText=t==='upload'?onS:offS;
+  if(t!=='cam') seloPararCamera();
 }
 
-function notif(msg, tipo) {
-  if (ntTimer) clearTimeout(ntTimer);
-  const n   = document.getElementById('notif');
-  const ico = document.getElementById('notifIco');
-  document.getElementById('notifMsg').textContent = msg;
-  const map = { success:['fas fa-check-circle','#1a7c3e'], error:['fas fa-times-circle','#c11f2f'],
-                warning:['fas fa-exclamation-triangle','#b45b0a'], info:['fas fa-info-circle','#1E3B5A'] };
-  const [cls, color] = map[tipo] || map.info;
-  ico.className = cls; ico.style.color = color;
-  n.style.display = 'flex';
-  ntTimer = setTimeout(() => { n.style.display = 'none'; }, 3400);
+async function seloIniciarCam(){
+  const btn=document.getElementById('seloBtnIniciarCam'); if(btn) btn.style.display='none';
+  try{
+    seloStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:960}}});
+    const vid=document.getElementById('seloVideo');
+    vid.srcObject=seloStream; vid.style.display='block';
+    const idle=document.getElementById('seloIdleMsg'); if(idle) idle.style.display='none';
+    const ov=document.getElementById('seloOverlay'); if(ov) ov.style.display='block';
+    toast('Câmera ativa — aponte para o selo','success');
+  }catch(e){
+    toast('Câmera: '+e.message,'error');
+    const btn2=document.getElementById('seloBtnIniciarCam'); if(btn2) btn2.style.display='flex';
+  }
 }
 
-// Hidden div for Html5Qrcode temp reader
-const tmp = document.createElement('div');
-tmp.id = '_tmp_reader_hidden';
-tmp.style.cssText = 'display:none;position:absolute;width:1px;height:1px;overflow:hidden;';
-document.body.appendChild(tmp);
+function seloPararCamera(){
+  if(seloStream){seloStream.getTracks().forEach(t=>t.stop());seloStream=null;}
+  const vid=document.getElementById('seloVideo'); if(vid){vid.srcObject=null;vid.style.display='none';}
+  const btn=document.getElementById('seloBtnIniciarCam'); if(btn) btn.style.display='flex';
+  const idle=document.getElementById('seloIdleMsg'); if(idle) idle.style.display='flex';
+}
 
-// Init
-atualizarBadgeLog();
+window.seloTirarFoto=function(){
+  const vid=document.getElementById('seloVideo');
+  const canvas=document.getElementById('seloCanvas');
+  if(!vid||!vid.srcObject){toast('Inicie a câmera primeiro','warning');return;}
+  canvas.width=vid.videoWidth||640; canvas.height=vid.videoHeight||480;
+  canvas.getContext('2d').drawImage(vid,0,0);
+  seloFotoURL=canvas.toDataURL('image/jpeg',0.9);
+  const img=document.getElementById('seloFotoPreview');
+  if(img){img.src=seloFotoURL;img.style.display='block';}
+  if(vid) vid.style.display='none';
+  const bc=document.getElementById('seloBtnsCam'); if(bc) bc.classList.add('hidden');
+  const bf=document.getElementById('seloBtnsFoto'); if(bf) bf.classList.remove('hidden');
+  seloPararCamera();
+};
+
+window.seloNovamente=function(){
+  seloFotoURL=null;
+  const img=document.getElementById('seloFotoPreview'); if(img) img.style.display='none';
+  const bc=document.getElementById('seloBtnsCam'); if(bc) bc.classList.remove('hidden');
+  const bf=document.getElementById('seloBtnsFoto'); if(bf) bf.classList.add('hidden');
+  const rs=document.getElementById('seloResultado'); if(rs) rs.style.display='none';
+  seloIniciarCam();
+};
+
+function seloDataURLtoFile(dataURL,filename){
+  const arr=dataURL.split(','),mime=arr[0].match(/:(.*?);/)[1];
+  const bstr=atob(arr[1]);let n=bstr.length;const u8=new Uint8Array(n);
+  while(n--) u8[n]=bstr.charCodeAt(n);
+  return new File([u8],filename,{type:mime});
+}
+
+async function seloExtrairCodigos(dataURL){
+  return new Promise(resolve=>{
+    const tmp=document.createElement('div');
+    tmp.id='_stmp_'+Date.now(); tmp.style.cssText='display:none;position:absolute;width:1px;height:1px;';
+    document.body.appendChild(tmp);
+    const rd=new Html5Qrcode(tmp.id,{verbose:false});
+    rd.scanFile(seloDataURLtoFile(dataURL,'selo.jpg'),false).then(raw=>{
+      try{document.body.removeChild(tmp);}catch{}
+      const segs=(raw||'').match(/[A-Z0-9]{4,}/g)||[];
+      resolve({raw,campos:segs.slice(0,4),ok:true});
+    }).catch(()=>{
+      try{document.body.removeChild(tmp);}catch{}
+      resolve({raw:'',campos:[],ok:false});
+    });
+  });
+}
+
+window.seloProcessar=async function(){
+  if(!seloFotoURL){toast('Tire a foto primeiro','warning');return;}
+  const btn=document.querySelector('#pageLotes .btn-success[onclick="seloProcessar()"]');
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processando...';}
+  const res=await seloExtrairCodigos(seloFotoURL);
+  if(btn){btn.disabled=false;btn.innerHTML='<i class="fas fa-cogs"></i> Processar';}
+  seloMostrarResultado(res);
+};
+
+window.seloCarregarUpload=function(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    seloUploadURL=e.target.result;
+    const img=document.getElementById('seloUploadPreview');
+    if(img){img.src=seloUploadURL;img.style.display='block';}
+    const bu=document.getElementById('seloBtnsUpload'); if(bu) bu.classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+};
+
+window.seloProcessarUpload=async function(){
+  if(!seloUploadURL){toast('Selecione uma imagem','warning');return;}
+  const res=await seloExtrairCodigos(seloUploadURL);
+  seloMostrarResultado(res);
+};
+
+function seloMostrarResultado(res){
+  const campos=res.campos||[]; const raw=res.raw||'';
+  let html='';
+  if(!campos.length&&!raw){
+    html=`<div style="font-size:.76rem;color:#b45b0a;margin-bottom:8px;">⚠️ Código não encontrado automaticamente. Digite:</div>
+    <input class="input input-mono" id="sf-0" placeholder="Código 1 (ex: ZZVH12K2F)" style="margin-bottom:6px;">
+    <input class="input input-mono" id="sf-1" placeholder="Código 2 (ex: JTOCX9000)">`;
+  }else{
+    const vals=campos.length?campos:(raw?[raw]:[]);
+    html=vals.map((v,i)=>`<input class="input input-mono" id="sf-${i}" value="${v}" style="margin-bottom:6px;">`).join('');
+    toast('Código extraído: '+vals.slice(0,2).join(' '),'success');
+  }
+  const rf=document.getElementById('seloResultFields'); if(rf) rf.innerHTML=html;
+  const rs=document.getElementById('seloResultado'); if(rs) rs.style.display='block';
+  const bf=document.getElementById('seloBtnsFoto'); if(bf) bf.classList.add('hidden');
+}
+
+window.seloAplicar=function(){
+  const campos=[];
+  for(let i=0;i<6;i++){const el=document.getElementById('sf-'+i);if(el&&el.value.trim())campos.push(el.value.trim());}
+  const codigo=campos.join('');
+  if(!codigo){toast('Preencha o código','warning');return;}
+  seloUltimoId=codigo;
+  // Adiciona à lista da sessão
+  seloCapturasSession.unshift({ts:new Date().toLocaleString('pt-BR'),codigo});
+  seloRenderLista();
+  toast('Código registrado: '+codigo,'success');
+  // Se foi aberto a partir da aba Etiqueta, preenche e volta
+  if(pendSeloParaEtq){
+    const inp=document.getElementById('seloCodigoInput');
+    if(inp) inp.value=codigo;
+    pendSeloParaEtq=false;
+    goPage('Etiqueta'); goSub('nova');
+  }
+  // Volta para câmera em sequência
+  seloNovaCaptura();
+};
+
+window.seloNovaCaptura=function(){
+  seloFotoURL=null; seloUploadURL=null;
+  const rs=document.getElementById('seloResultado'); if(rs) rs.style.display='none';
+  const img=document.getElementById('seloFotoPreview'); if(img) img.style.display='none';
+  const up=document.getElementById('seloUploadPreview'); if(up) up.style.display='none';
+  const bu=document.getElementById('seloBtnsUpload'); if(bu) bu.classList.add('hidden');
+  const bc=document.getElementById('seloBtnsCam'); if(bc) bc.classList.remove('hidden');
+  const bf=document.getElementById('seloBtnsFoto'); if(bf) bf.classList.add('hidden');
+  seloIniciarCam();
+};
+
+window.seloFechar=function(){
+  seloPararCamera();
+  goPage('Etiqueta');
+};
+
+function seloRenderLista(){
+  const wrap=document.getElementById('seloListaWrap');
+  const lista=document.getElementById('seloListaCapturas');
+  const cnt=document.getElementById('seloContador');
+  if(!seloCapturasSession.length){if(wrap)wrap.style.display='none';return;}
+  if(wrap)wrap.style.display='block';
+  if(cnt)cnt.textContent=seloCapturasSession.length;
+  if(lista)lista.innerHTML=seloCapturasSession.map(e=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f0fdf4;border-radius:10px;margin-bottom:5px;border:1px solid #86efac;">
+      <i class="fas fa-shield-alt" style="color:#1a7c3e;font-size:.8rem;"></i>
+      <div style="flex:1;font-family:monospace;font-size:.8rem;font-weight:700;">${e.codigo}</div>
+      <div style="font-size:.62rem;color:#6B7A8F;">${e.ts.split(' ')[1]||''}</div>
+    </div>`).join('');
+}
+
+window.seloSalvarTodos=function(){
+  if(!seloCapturasSession.length){toast('Nenhuma captura','warning');return;}
+  const ultimo=seloCapturasSession[0];
+  if(ultimo){
+    const inp=document.getElementById('seloCodigoInput');
+    if(inp) inp.value=ultimo.codigo;
+  }
+  seloPararCamera();
+  goPage('Etiqueta'); goSub('nova');
+  toast('Códigos salvos! Selecione a etiqueta e salve.','success');
+};
+
+// ═══════════════════════════════════
+// UTILS
+// ═══════════════════════════════════
+function fmtData(d){
+  if(!d||d==='—'||d==='-')return '';
+  try{const p=d.split('T')[0];const[a,m,dd]=p.split('-');return dd+'/'+m+'/'+a;}catch{return d;}
+}
 </script>
 </body>
 </html>
