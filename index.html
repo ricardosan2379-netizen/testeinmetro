@@ -4,162 +4,195 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>INMETRO Selo · Diagnóstico</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<title>BCB · Leitor de Cédulas</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
-
-/* ── ROOT ── */
+*{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg:#F5F8FF;
+  --bg:#F4F7FB;
   --navy:#0D2137;
   --navy2:#1E3B5A;
-  --card:#fff;
-  --border:#E0E8F0;
-  --accent:#1E3B5A;
-  --green:#1a7c3e;
+  --gold:#C9A227;
+  --gold2:#F5C842;
+  --green:#0e6832;
+  --green2:#1a7c3e;
+  --red:#c11f2f;
   --warn:#b45b0a;
-  --danger:#c11f2f;
+  --border:#DDE6EF;
   --muted:#6B7A8F;
+  --card:#fff;
   --mono:'JetBrains Mono',monospace;
+  --sans:'Inter',sans-serif;
 }
-
-body{background:var(--bg);min-height:100vh;display:flex;justify-content:center;align-items:flex-start;}
-.app{width:100%;max-width:480px;min-height:100vh;display:flex;flex-direction:column;background:#F5F8FF;box-shadow:0 0 40px rgba(0,0,0,.12);}
+*{font-family:var(--sans);}
+body{background:var(--bg);min-height:100vh;display:flex;justify-content:center;}
+.app{width:100%;max-width:480px;min-height:100vh;display:flex;flex-direction:column;background:var(--bg);box-shadow:0 0 60px rgba(0,0,0,.13);}
 
 /* ── HEADER ── */
-.hdr{background:linear-gradient(135deg,#0D2137,#1E3B5A);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
-.hdr-logo{width:42px;height:42px;background:rgba(255,255,255,.12);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
-.hdr-title{font-size:1.05rem;font-weight:700;}
-.hdr-sub{font-size:.7rem;opacity:.7;margin-top:1px;}
-.hdr-pill{margin-left:auto;background:rgba(26,124,62,.8);border:1px solid rgba(26,124,62,1);color:#fff;padding:4px 10px;border-radius:30px;font-size:.66rem;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:5px;}
+.hdr{background:linear-gradient(135deg,#0D2137 0%,#1a3554 60%,#0e4620 100%);padding:16px 18px 14px;display:flex;align-items:center;gap:13px;position:relative;overflow:hidden;flex-shrink:0;}
+.hdr::before{content:'';position:absolute;right:-20px;top:-20px;width:120px;height:120px;background:rgba(201,162,39,.08);border-radius:50%;}
+.hdr::after{content:'';position:absolute;right:20px;bottom:-30px;width:80px;height:80px;background:rgba(201,162,39,.06);border-radius:50%;}
+.hdr-icon{width:46px;height:46px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.35rem;color:var(--navy);flex-shrink:0;box-shadow:0 4px 14px rgba(201,162,39,.4);}
+.hdr-text h1{font-size:1.05rem;font-weight:800;color:#fff;letter-spacing:-.2px;}
+.hdr-text p{font-size:.68rem;color:rgba(255,255,255,.6);margin-top:1px;}
+.hdr-pill{margin-left:auto;background:rgba(201,162,39,.2);border:1px solid rgba(201,162,39,.5);color:var(--gold2);padding:4px 11px;border-radius:30px;font-size:.65rem;font-weight:700;display:flex;align-items:center;gap:5px;white-space:nowrap;z-index:1;}
 
-/* ── AVISO IMPORTANTE ── */
-.aviso-topo{background:linear-gradient(135deg,#fff3cd,#ffe082);border-bottom:2px solid #f0c040;padding:10px 16px;display:flex;align-items:flex-start;gap:10px;flex-shrink:0;}
-.aviso-topo i{color:#7a4500;font-size:1rem;margin-top:1px;flex-shrink:0;}
-.aviso-topo p{font-size:.74rem;color:#5a3000;line-height:1.55;font-weight:500;}
-.aviso-topo strong{color:#3a1a00;}
+/* ── ALERT BAR ── */
+.alert-bar{background:linear-gradient(135deg,#fff8e1,#fff3cd);border-bottom:2px solid #f0c040;padding:10px 16px;display:flex;align-items:flex-start;gap:10px;flex-shrink:0;}
+.alert-bar i{color:#7a4500;font-size:.95rem;margin-top:1px;flex-shrink:0;}
+.alert-bar p{font-size:.72rem;color:#5a3000;line-height:1.55;font-weight:500;}
+.alert-bar strong{color:#3a1a00;}
 
 /* ── TABS ── */
-.tabs{display:flex;background:#fff;border-radius:40px;padding:4px;margin:10px 14px 0;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.07);}
-.tab{flex:1;text-align:center;padding:9px 2px;border-radius:40px;font-weight:600;font-size:.72rem;color:var(--muted);cursor:pointer;transition:.25s;white-space:nowrap;}
-.tab.on{background:#1E3B5A;color:#fff;}
+.tabs-wrap{padding:12px 14px 0;background:var(--bg);flex-shrink:0;}
+.tabs{display:flex;background:#fff;border-radius:40px;padding:4px;box-shadow:0 2px 10px rgba(0,0,0,.07);border:1px solid var(--border);}
+.tab{flex:1;text-align:center;padding:9px 3px;border-radius:40px;font-weight:600;font-size:.71rem;color:var(--muted);cursor:pointer;transition:.22s;white-space:nowrap;line-height:1.2;}
+.tab i{display:block;font-size:.95rem;margin-bottom:2px;}
+.tab.on{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;box-shadow:0 4px 12px rgba(13,33,55,.25);}
 
 /* ── CONTENT ── */
-.content{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch;}
+.content{flex:1;overflow-y:auto;padding:14px 14px 20px;-webkit-overflow-scrolling:touch;}
 .pane{display:none;}
 .pane.on{display:block;}
 
 /* ── CARD ── */
-.card{background:#fff;border-radius:20px;padding:16px;margin-bottom:14px;box-shadow:0 3px 10px rgba(0,20,40,.06);border:1px solid var(--border);}
-.card-hd{display:flex;align-items:center;gap:9px;margin-bottom:12px;font-size:.9rem;font-weight:700;color:#13293D;}
-.card-hd i{color:#1E3B5A;}
+.card{background:var(--card);border-radius:20px;padding:16px;margin-bottom:14px;box-shadow:0 4px 16px rgba(0,20,60,.06);border:1px solid var(--border);}
+.card-hd{display:flex;align-items:center;gap:9px;margin-bottom:13px;font-size:.9rem;font-weight:700;color:#13293D;}
+.card-hd i{color:var(--navy2);}
+.card-hd .hd-badge{margin-left:auto;background:#E8F0FB;color:var(--navy2);padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:700;}
 
-/* ── SCANNER ── */
-.cam-wrap{width:100%;aspect-ratio:1;background:#111;border-radius:20px;overflow:hidden;position:relative;border:3px solid #1E3B5A;margin-bottom:12px;}
-.cam-idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:rgba(255,255,255,.4);}
-.cam-idle i{font-size:3rem;}
-.cam-idle p{font-size:.8rem;text-align:center;padding:0 20px;line-height:1.5;}
-#qr-reader{width:100%;height:100%;}
-#qr-reader video{width:100%!important;height:100%!important;object-fit:cover!important;}
+/* ── SUBTABS (Câmera / Foto) ── */
+.stabs{display:flex;gap:8px;margin-bottom:14px;}
+.stab{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:14px;font-size:.8rem;font-weight:600;cursor:pointer;transition:.2s;border:2px solid var(--border);color:var(--muted);background:#fff;}
+.stab.on{background:var(--navy2);color:#fff;border-color:var(--navy2);box-shadow:0 4px 14px rgba(30,59,90,.25);}
+.stab i{font-size:1rem;}
 
-/* Corner overlay */
-.cam-overlay{position:absolute;inset:0;pointer-events:none;}
-.corner{position:absolute;width:32px;height:32px;border-color:#4CAF50;border-style:solid;opacity:.95;}
-.c-tl{top:14px;left:14px;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
-.c-tr{top:14px;right:14px;border-width:3px 3px 0 0;border-radius:0 4px 0 0;}
-.c-bl{bottom:14px;left:14px;border-width:0 0 3px 3px;border-radius:0 0 0 4px;}
-.c-br{bottom:14px;right:14px;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
-.scan-line{position:absolute;left:14px;right:14px;height:2px;background:linear-gradient(90deg,transparent,#4CAF50,transparent);animation:scanAnim 2.2s ease-in-out infinite;}
-@keyframes scanAnim{0%{top:14px;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:calc(100% - 14px);opacity:0}}
+/* ── CÂMERA ── */
+.cam-wrap{width:100%;background:#0a0e14;border-radius:18px;overflow:hidden;position:relative;border:3px solid var(--navy2);margin-bottom:12px;}
+.cam-wide{aspect-ratio:16/9;} /* Cédulas são horizontais */
+.cam-square{aspect-ratio:1;}
+#bcb-reader{width:100%;height:100%;}
+#bcb-reader video{width:100%!important;height:100%!important;object-fit:cover!important;}
+.cam-idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:rgba(255,255,255,.35);}
+.cam-idle i{font-size:2.8rem;}
+.cam-idle p{font-size:.78rem;text-align:center;padding:0 24px;line-height:1.6;}
 
-.cam-label{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.75));padding:18px 12px 10px;text-align:center;font-size:.73rem;font-weight:600;color:rgba(255,255,255,.9);}
+/* Guia de enquadramento para cédula */
+.cam-guide{position:absolute;inset:0;pointer-events:none;}
+.guide-rect{position:absolute;top:12%;left:8%;right:8%;bottom:12%;border:2px dashed rgba(201,162,39,.6);border-radius:8px;}
+.guide-label{position:absolute;bottom:14%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);color:rgba(255,255,255,.85);padding:3px 12px;border-radius:20px;font-size:.65rem;font-weight:600;white-space:nowrap;}
+.scan-line-h{position:absolute;left:8%;right:8%;height:2px;background:linear-gradient(90deg,transparent,var(--gold2),transparent);animation:scanH 2.5s ease-in-out infinite;}
+@keyframes scanH{0%{top:12%;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:88%;opacity:0}}
+.cam-status{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;padding:4px 14px;border-radius:20px;font-size:.68rem;font-weight:600;white-space:nowrap;}
+
+/* ── UPLOAD / FOTO ── */
+.upload-zone{border:2.5px dashed var(--border);border-radius:18px;padding:28px 20px;text-align:center;cursor:pointer;transition:.2s;background:#FAFCFF;position:relative;margin-bottom:12px;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--navy2);background:#F0F5FF;}
+.upload-zone i{font-size:2.4rem;color:var(--navy2);opacity:.4;display:block;margin-bottom:10px;}
+.upload-zone p{font-size:.8rem;color:var(--muted);line-height:1.6;}
+.upload-zone strong{color:var(--navy2);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.img-preview-wrap{position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--border);margin-bottom:12px;background:#000;}
+.img-preview-wrap img{width:100%;display:block;}
+.img-preview-wrap canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+.img-clear-btn{position:absolute;top:10px;right:10px;background:rgba(193,31,47,.85);color:#fff;border:none;width:30px;height:30px;border-radius:50%;font-size:.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 
 /* ── BOTÕES ── */
-.btn{border:none;padding:12px;border-radius:40px;font-size:.88rem;font-weight:600;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:.2s;margin-bottom:10px;}
+.btn{border:none;padding:12px;border-radius:40px;font-size:.87rem;font-weight:600;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:.2s;margin-bottom:10px;}
 .btn:active{transform:scale(.97);}
 .btn:last-child{margin-bottom:0;}
-.btn-p{background:linear-gradient(135deg,#1E3B5A,#0D2137);color:#fff;}
-.btn-s{background:#fff;color:#1E3B5A;border:1.5px solid #1E3B5A;}
-.btn-g{background:linear-gradient(135deg,#1a7c3e,#145c2e);color:#fff;}
+.btn-navy{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;box-shadow:0 4px 14px rgba(13,33,55,.22);}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);box-shadow:0 4px 14px rgba(201,162,39,.3);font-weight:700;}
+.btn-green{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;box-shadow:0 4px 14px rgba(14,104,50,.2);}
+.btn-outline{background:#fff;color:var(--navy2);border:1.5px solid var(--border);}
+.btn-danger{background:rgba(193,31,47,.1);color:var(--red);border:1.5px solid rgba(193,31,47,.25);}
 .btn-row{display:flex;gap:8px;}
 .btn-row .btn{flex:1;margin:0;}
-.btn-sm{padding:7px 14px;font-size:.76rem;width:auto;margin:0;}
-
-/* ── FORMATO CHECKBOXES ── */
-.fmt-list{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
-.fmt-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:30px;font-size:.71rem;font-weight:600;border:1.5px solid var(--border);color:var(--muted);cursor:pointer;transition:.2s;user-select:none;}
-.fmt-chip input{width:13px;height:13px;accent-color:#1E3B5A;}
-.fmt-chip.on{background:#E8F0FB;color:#1E3B5A;border-color:#1E3B5A;}
-/* QR chip bloqueado */
-.fmt-chip.blocked{background:#FFF3CD;color:#7a4500;border-color:#f0c040;cursor:not-allowed;opacity:.8;}
-.fmt-chip.blocked input{display:none;}
+.btn-sm{padding:8px 14px;font-size:.75rem;width:auto;margin:0;}
 
 /* ── RESULTADO ── */
-.res-box{background:#F0F5FF;border-radius:16px;padding:13px;border:2px solid #CBD5E1;margin-bottom:12px;}
-.res-box.success{background:#DFF0E4;border-color:#A8D5B5;}
-.res-box.warn{background:#FFF3CD;border-color:#f0c040;}
-.res-box.info{background:#E8F0FB;border-color:#C5D8F5;}
-.res-lbl{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:5px;}
-.res-val{font-family:var(--mono);font-size:.84rem;font-weight:600;color:#13293D;word-break:break-all;line-height:1.6;}
-.fmt-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:30px;font-size:.7rem;font-weight:700;margin-bottom:10px;}
-.fb-dm{background:#EDE9FE;color:#5b21b6;border:1px solid #c4b5fd;}
-.fb-c128{background:#FEF3C7;color:#92400e;border:1px solid #fcd34d;}
-.fb-c39{background:#FFF7ED;color:#c2410c;border:1px solid #fdba74;}
-.fb-aztec{background:#ECFDF5;color:#065f46;border:1px solid #6ee7b7;}
-.fb-pdf{background:#EFF6FF;color:#1d4ed8;border:1px solid #93c5fd;}
-.fb-ean{background:#F0FDF4;color:#166534;border:1px solid #86efac;}
-.fb-other{background:#F8FAFC;color:var(--muted);border:1px solid var(--border);}
+.res-card{border-radius:18px;padding:14px;margin-bottom:12px;border:2px solid;}
+.res-card.success{background:#DFF0E4;border-color:#A8D5B5;}
+.res-card.info{background:#E8F0FB;border-color:#C5D8F5;}
+.res-card.warn{background:#FFF3CD;border-color:#f0c040;}
+.res-card.neutral{background:#F8FAFD;border-color:var(--border);}
+.res-lbl{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:5px;}
+.res-val{font-family:var(--mono);font-size:.9rem;font-weight:700;color:#0D2137;word-break:break-all;line-height:1.6;}
+.res-val.big{font-size:1.05rem;letter-spacing:.5px;}
+.res-val.green{color:var(--green);}
+.res-val.gold{color:#8a6a00;}
 
-/* ── ANÁLISE GRID ── */
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
-.a-cell{background:#F8FAFD;border-radius:12px;padding:10px;border:1px solid var(--border);}
-.a-cell-lbl{font-size:.63rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
-.a-cell-val{font-size:.85rem;font-weight:700;color:#13293D;font-family:var(--mono);}
-.a-cell-val.green{color:#1a7c3e;}
-.a-cell-val.warn{color:#b45b0a;}
-.a-cell-val.info{color:#1E3B5A;}
-.a-cell.span2{grid-column:span 2;}
-.a-cell.highlight{background:#DFF0E4;border-color:#A8D5B5;}
-.a-cell.highlight .a-cell-val{color:#0e4d24;}
+/* Formato badge */
+.fmt-tag{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:30px;font-size:.68rem;font-weight:700;margin-bottom:10px;}
+.ft-dm{background:#EDE9FE;color:#5b21b6;border:1px solid #c4b5fd;}
+.ft-c128{background:#FEF3C7;color:#92400e;border:1px solid #fcd34d;}
+.ft-c39{background:#FFF7ED;color:#c2410c;border:1px solid #fdba74;}
+.ft-aztec{background:#ECFDF5;color:#065f46;border:1px solid #6ee7b7;}
+.ft-pdf{background:#EFF6FF;color:#1d4ed8;border:1px solid #93c5fd;}
+.ft-ean{background:#F0FDF4;color:#166534;border:1px solid #86efac;}
+.ft-other{background:#F8FAFC;color:var(--muted);border:1px solid var(--border);}
 
-/* ── LOG ── */
-.log-item{border-bottom:1px solid var(--border);padding:10px 0;}
-.log-item:last-child{border-bottom:none;}
-.log-ts{font-size:.63rem;color:var(--muted);font-family:var(--mono);}
-.log-fmt{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.63rem;font-weight:700;margin:3px 0;}
-.log-raw{font-family:var(--mono);font-size:.75rem;color:#1E3B5A;word-break:break-all;margin:3px 0;line-height:1.6;}
-.log-extract{font-size:.71rem;color:#1a7c3e;font-weight:600;margin-top:2px;}
-.log-ignored{font-size:.68rem;color:#b45b0a;font-style:italic;}
-.btn-copy{background:none;border:1px solid var(--border);color:var(--muted);padding:3px 9px;border-radius:20px;font-size:.65rem;cursor:pointer;transition:.2s;}
-.btn-copy:hover{border-color:#1E3B5A;color:#1E3B5A;}
+/* Grid analítica */
+.ag{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.ag-cell{background:#F8FAFD;border-radius:12px;padding:10px;border:1px solid var(--border);}
+.ag-lbl{font-size:.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+.ag-val{font-size:.84rem;font-weight:700;color:#0D2137;font-family:var(--mono);}
+.ag-val.green{color:var(--green);}
+.ag-val.gold{color:#8a6a00;}
+.ag-val.info{color:var(--navy2);}
+.ag.span2{grid-column:span 2;}
+.ag-cell.hilite{background:#DFF0E4;border-color:#A8D5B5;}
+.ag-cell.hilite .ag-val{color:#0e4d24;}
+.ag-cell.s2{grid-column:span 2;}
+
+/* Cédula info */
+.cedula-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:30px;font-size:.78rem;font-weight:700;margin-bottom:10px;}
+.cb-green{background:#DFF0E4;color:#0e4d24;border:1.5px solid #A8D5B5;}
+.cb-blue{background:#E8F0FB;color:#1a3b5d;border:1.5px solid #C5D8F5;}
+.cb-gold{background:#FEF3C7;color:#7a4500;border:1.5px solid #fcd34d;}
+.cb-red{background:#FFE5E5;color:#7a0a0a;border:1.5px solid #fca5a5;}
 
 /* ── MANUAL ── */
-.ta{width:100%;padding:11px 14px;border-radius:16px;border:1.5px solid var(--border);font-size:.83rem;background:#fff;color:#13293D;resize:none;height:84px;transition:.2s;font-family:var(--mono);}
-.ta:focus{outline:none;border-color:#1E3B5A;}
+.ta{width:100%;padding:12px 14px;border-radius:16px;border:1.5px solid var(--border);font-size:.83rem;background:#fff;color:#0D2137;resize:none;height:80px;transition:.2s;font-family:var(--mono);}
+.ta:focus{outline:none;border-color:var(--navy2);}
+
+/* ── LOG ── */
+.log-row{padding:11px 0;border-bottom:1px solid var(--border);}
+.log-row:last-child{border-bottom:none;}
+.log-ts{font-size:.62rem;color:var(--muted);font-family:var(--mono);}
+.log-raw{font-family:var(--mono);font-size:.74rem;color:var(--navy2);word-break:break-all;margin:4px 0;line-height:1.55;}
+.log-meta{font-size:.68rem;color:var(--muted);}
+.log-highlight{font-size:.72rem;color:var(--green);font-weight:600;margin-top:2px;}
+.btn-copy{background:none;border:1px solid var(--border);color:var(--muted);padding:3px 9px;border-radius:20px;font-size:.64rem;cursor:pointer;transition:.2s;}
+.btn-copy:hover{border-color:var(--navy2);color:var(--navy2);}
 
 /* ── SOBRE ── */
-.info-blk{border-radius:14px;padding:12px 14px;margin-bottom:10px;font-size:.8rem;line-height:1.7;}
-.info-blk.azul{background:#E8F0FB;border:1px solid #C5D8F5;color:#1a3b5d;}
-.info-blk.amarelo{background:#FFF3CD;border:1px solid #f0c040;color:#5a3000;}
-.info-blk.verde{background:#DFF0E4;border:1px solid #A8D5B5;color:#0e4d24;}
-.info-blk ul{padding-left:16px;margin-top:4px;}
+.info-blk{border-radius:14px;padding:13px;margin-bottom:10px;font-size:.79rem;line-height:1.75;}
+.info-blk.blue{background:#E8F0FB;border:1px solid #C5D8F5;color:#1a3b5d;}
+.info-blk.yellow{background:#FFF3CD;border:1px solid #f0c040;color:#5a3000;}
+.info-blk.green{background:#DFF0E4;border:1px solid #A8D5B5;color:#0e4d24;}
+.info-blk.gold{background:#FEF3C7;border:1px solid #fcd34d;color:#7a4500;}
+.info-blk ul{padding-left:18px;margin-top:6px;}
 .info-blk li{margin-bottom:3px;}
+.info-blk code{background:rgba(0,0,0,.08);padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:.78rem;}
+
+/* Processing overlay */
+.processing{position:absolute;inset:0;background:rgba(0,0,0,.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:14px;z-index:10;}
+.processing p{color:#fff;font-size:.82rem;font-weight:600;}
+.spin{width:36px;height:36px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--gold2);border-radius:50%;animation:spi 1s linear infinite;}
+@keyframes spi{to{transform:rotate(360deg)}}
 
 /* ── MISC ── */
-.empty{text-align:center;padding:30px 16px;color:var(--muted);}
-.empty i{font-size:2.2rem;display:block;margin-bottom:10px;opacity:.2;}
-.empty p{font-size:.82rem;line-height:1.6;}
-.notif{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:#fff;border-radius:30px;padding:9px 18px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:2000;display:flex;align-items:center;gap:7px;animation:ni .3s ease;font-size:.84rem;white-space:nowrap;border:1px solid var(--border);}
-@keyframes ni{from{top:-50px;opacity:0}to{top:14px;opacity:1}}
 .sep{height:1px;background:var(--border);margin:12px 0;}
-.mono{font-family:var(--mono);}
-footer{padding:9px;text-align:center;font-size:.65rem;color:var(--muted);border-top:1px solid var(--border);background:#fff;flex-shrink:0;}
-
-.spin{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp 1s linear infinite;display:inline-block;}
-@keyframes sp{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:32px 16px;color:var(--muted);}
+.empty i{font-size:2.3rem;display:block;margin-bottom:10px;opacity:.2;}
+.empty p{font-size:.82rem;line-height:1.6;}
+.notif{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:#fff;border-radius:30px;padding:9px 18px;box-shadow:0 6px 24px rgba(0,0,0,.16);z-index:9999;display:flex;align-items:center;gap:8px;animation:ni .3s ease;font-size:.84rem;white-space:nowrap;border:1px solid var(--border);}
+@keyframes ni{from{top:-60px;opacity:0}to{top:14px;opacity:1}}
+footer{padding:9px;text-align:center;font-size:.64rem;color:var(--muted);border-top:1px solid var(--border);background:#fff;flex-shrink:0;}
+.hidden{display:none!important;}
 </style>
 </head>
 <body>
@@ -167,138 +200,207 @@ footer{padding:9px;text-align:center;font-size:.65rem;color:var(--muted);border-
 
   <!-- HEADER -->
   <div class="hdr">
-    <div class="hdr-logo"><i class="fas fa-shield-alt"></i></div>
-    <div>
-      <div class="hdr-title">INMETRO · Diagnóstico de Selo</div>
-      <div class="hdr-sub">Extrator de código — Protótipo v1.0</div>
+    <div class="hdr-icon"><i class="fas fa-money-bill-wave"></i></div>
+    <div class="hdr-text">
+      <h1>BCB · Leitor de Cédulas</h1>
+      <p>Banco Central do Brasil — Diagnóstico de Código</p>
     </div>
-    <div class="hdr-pill"><i class="fas fa-flask"></i> MODO TESTE</div>
+    <div class="hdr-pill"><i class="fas fa-flask"></i> PROTÓTIPO</div>
   </div>
 
   <!-- AVISO -->
-  <div class="aviso-topo">
-    <i class="fas fa-exclamation-triangle"></i>
+  <div class="alert-bar">
+    <i class="fas fa-info-circle"></i>
     <p>
-      <strong>QR Code do selo = ignorado.</strong>
-      O QR Code visível no selo INMETRO contém apenas o link para baixar o app oficial — não possui dados do produto.
-      Este app lê os <strong>outros códigos</strong> presentes no selo (Data Matrix, Code 128, etc.) e registra <strong>tudo</strong> que conseguir extrair.
+      <strong>Modo diagnóstico:</strong> captura e registra <strong>todos</strong> os códigos encontrados na cédula — série, número, Data Matrix, barcodes e QR Code (se houver).
+      Identifique quais campos são únicos e úteis para integração.
     </p>
   </div>
 
   <!-- TABS -->
-  <div class="tabs">
-    <div class="tab on" id="tScanner" onclick="goTab('Scanner')"><i class="fas fa-camera"></i> Scanner</div>
-    <div class="tab" id="tManual"  onclick="goTab('Manual')"><i class="fas fa-keyboard"></i> Manual</div>
-    <div class="tab" id="tLog"     onclick="goTab('Log')"><i class="fas fa-list"></i> Log <span id="logBadge" style="background:#1E3B5A;color:#fff;border-radius:30px;padding:0 6px;font-size:.65rem;margin-left:2px;">0</span></div>
-    <div class="tab" id="tSobre"   onclick="goTab('Sobre')"><i class="fas fa-info-circle"></i> Sobre</div>
+  <div class="tabs-wrap">
+    <div class="tabs">
+      <div class="tab on" id="tLeitor" onclick="goTab('Leitor')"><i class="fas fa-camera"></i>Leitor</div>
+      <div class="tab" id="tManual"  onclick="goTab('Manual')"><i class="fas fa-keyboard"></i>Manual</div>
+      <div class="tab" id="tLog"     onclick="goTab('Log')"><i class="fas fa-list"></i>Log<br><span id="logBadge" style="background:var(--navy2);color:#fff;border-radius:20px;padding:0 6px;font-size:.6rem;">0</span></div>
+      <div class="tab" id="tSobre"   onclick="goTab('Sobre')"><i class="fas fa-book"></i>Sobre</div>
+    </div>
   </div>
 
   <div class="content">
 
-    <!-- ═══ SCANNER ═══ -->
-    <div class="pane on" id="pScanner">
+    <!-- ═══════ LEITOR ═══════ -->
+    <div class="pane on" id="pLeitor">
 
-      <div class="card" style="margin-top:4px;">
-        <div class="card-hd"><i class="fas fa-barcode"></i> Leitor de Código do Selo</div>
-
-        <div class="cam-wrap" id="camWrap">
-          <div class="cam-idle" id="camIdle">
-            <i class="fas fa-shield-alt"></i>
-            <p>Pressione <strong>Iniciar Scanner</strong><br>e aponte para o <strong>código do selo</strong><br>(não o QR Code)</p>
-          </div>
-          <div id="qr-reader" style="display:none;width:100%;height:100%;"></div>
-          <div class="cam-overlay" id="camOverlay" style="display:none;">
-            <div class="corner c-tl"></div><div class="corner c-tr"></div>
-            <div class="corner c-bl"></div><div class="corner c-br"></div>
-            <div class="scan-line"></div>
-          </div>
-          <div class="cam-label" id="camLabel" style="display:none;">Aponte para o código (não o QR Code) ↑</div>
+      <!-- Sub-tabs: Câmera ao vivo / Foto ou Upload -->
+      <div class="stabs" style="margin-top:4px;">
+        <div class="stab on" id="stCamera" onclick="goStab('Camera')">
+          <i class="fas fa-video"></i> Câmera ao Vivo
         </div>
-
-        <div class="btn-row" style="margin-bottom:12px;">
-          <button class="btn btn-p" id="btnStart" onclick="startScanner()">
-            <i class="fas fa-play"></i> Iniciar Scanner
-          </button>
-          <button class="btn btn-s" id="btnStop" style="display:none;" onclick="stopScanner()">
-            <i class="fas fa-stop"></i> Parar
-          </button>
-          <button class="btn btn-s" id="btnFlash" style="width:48px;flex:0 0 48px;padding:0;" onclick="toggleFlash()" title="Lanterna">
-            <i class="fas fa-bolt"></i>
-          </button>
+        <div class="stab" id="stFoto" onclick="goStab('Foto')">
+          <i class="fas fa-image"></i> Foto / Upload
         </div>
-
-        <!-- Formatos — QR marcado como ignorado -->
-        <div style="font-size:.74rem;font-weight:700;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px;">Formatos monitorados</div>
-        <div class="fmt-list" id="fmtList">
-          <label class="fmt-chip blocked" title="Ignorado — só tem link do app INMETRO">
-            <i class="fas fa-ban" style="font-size:.65rem;"></i> QR Code — IGNORADO
-          </label>
-          <label class="fmt-chip on" id="fc_DATA_MATRIX">
-            <input type="checkbox" checked value="DATA_MATRIX"> Data Matrix
-          </label>
-          <label class="fmt-chip on" id="fc_AZTEC">
-            <input type="checkbox" checked value="AZTEC"> Aztec
-          </label>
-          <label class="fmt-chip on" id="fc_PDF_417">
-            <input type="checkbox" checked value="PDF_417"> PDF 417
-          </label>
-          <label class="fmt-chip on" id="fc_CODE_128">
-            <input type="checkbox" checked value="CODE_128"> Code 128
-          </label>
-          <label class="fmt-chip on" id="fc_CODE_39">
-            <input type="checkbox" checked value="CODE_39"> Code 39
-          </label>
-          <label class="fmt-chip on" id="fc_EAN_13">
-            <input type="checkbox" checked value="EAN_13"> EAN-13
-          </label>
-          <label class="fmt-chip on" id="fc_ITF">
-            <input type="checkbox" checked value="ITF"> ITF
-          </label>
-        </div>
-        <p style="font-size:.69rem;color:var(--muted);line-height:1.5;">
-          Desmarque formatos desnecessários para focar. Selos INMETRO/Casa da Moeda usam principalmente <strong>Data Matrix</strong> e <strong>Code 128</strong>.
-        </p>
       </div>
 
-      <!-- Último resultado -->
-      <div id="resArea" style="display:none;">
+      <!-- ── Câmera ao vivo ── -->
+      <div id="spCamera">
         <div class="card">
           <div class="card-hd">
-            <i class="fas fa-check-circle" style="color:#1a7c3e;"></i>
-            Código Extraído
-            <button class="btn-copy" style="margin-left:auto;" onclick="copiarUltimo()">
-              <i class="fas fa-copy"></i> Copiar
+            <i class="fas fa-video"></i> Scanner ao Vivo
+            <span class="hd-badge" id="camBadge">Parado</span>
+          </div>
+
+          <div class="cam-wrap cam-wide" id="camWrap">
+            <!-- Idle state -->
+            <div class="cam-idle" id="camIdle">
+              <i class="fas fa-money-bill-wave"></i>
+              <p>Aponte a câmera para a <strong>frente ou verso</strong> da cédula<br>enquadrando no guia</p>
+            </div>
+            <!-- Reader container -->
+            <div id="bcb-reader" style="display:none;width:100%;height:100%;"></div>
+            <!-- Overlay -->
+            <div class="cam-guide" id="camGuide" style="display:none;">
+              <div class="guide-rect"></div>
+              <div class="guide-label">Enquadre a cédula aqui</div>
+              <div class="scan-line-h"></div>
+            </div>
+            <div class="cam-status" id="camStatus" style="display:none;">Escaneando...</div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-navy" id="btnStart" onclick="startScanner()">
+              <i class="fas fa-play"></i> Iniciar Scanner
+            </button>
+            <button class="btn btn-outline" id="btnStop" style="display:none;" onclick="stopScanner()">
+              <i class="fas fa-stop"></i> Parar
+            </button>
+            <button class="btn btn-outline" id="btnFlash" style="width:48px;flex:0 0 48px;padding:0;margin:0;" onclick="toggleFlash()" title="Lanterna">
+              <i class="fas fa-bolt"></i>
             </button>
           </div>
-          <div id="resContent"></div>
+
+          <!-- Formatos -->
+          <div class="sep"></div>
+          <div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px;">
+            Formatos ativos (todos incluídos para cédulas)
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;" id="fmtList">
+            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #1E3B5A;background:#E8F0FB;color:#1E3B5A;cursor:pointer;">
+              <input type="checkbox" checked value="QR_CODE" onchange="toggleFmt(this)"> QR Code
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #5b21b6;background:#EDE9FE;color:#5b21b6;cursor:pointer;">
+              <input type="checkbox" checked value="DATA_MATRIX" onchange="toggleFmt(this)"> Data Matrix
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #92400e;background:#FEF3C7;color:#92400e;cursor:pointer;">
+              <input type="checkbox" checked value="CODE_128" onchange="toggleFmt(this)"> Code 128
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #c2410c;background:#FFF7ED;color:#c2410c;cursor:pointer;">
+              <input type="checkbox" checked value="CODE_39" onchange="toggleFmt(this)"> Code 39
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #065f46;background:#ECFDF5;color:#065f46;cursor:pointer;">
+              <input type="checkbox" checked value="AZTEC" onchange="toggleFmt(this)"> Aztec
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #1d4ed8;background:#EFF6FF;color:#1d4ed8;cursor:pointer;">
+              <input type="checkbox" checked value="PDF_417" onchange="toggleFmt(this)"> PDF 417
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #166534;background:#F0FDF4;color:#166534;cursor:pointer;">
+              <input type="checkbox" checked value="EAN_13" onchange="toggleFmt(this)"> EAN-13
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:30px;font-size:.7rem;font-weight:600;border:1.5px solid #166534;background:#F0FDF4;color:#166534;cursor:pointer;">
+              <input type="checkbox" checked value="ITF" onchange="toggleFmt(this)"> ITF
+            </label>
+          </div>
+        </div>
+
+        <!-- Resultado ao vivo -->
+        <div id="resVivo" style="display:none;">
+          <div class="card">
+            <div class="card-hd">
+              <i class="fas fa-check-circle" style="color:var(--green2);"></i> Código Detectado
+              <button class="btn-copy" style="margin-left:auto;" onclick="copiarUltimo()"><i class="fas fa-copy"></i> Copiar</button>
+            </div>
+            <div id="resVivoContent"></div>
+          </div>
         </div>
       </div>
 
-      <!-- QR Code detectado (aviso) -->
-      <div id="qrWarning" style="display:none;" class="card">
-        <div style="background:#FFF3CD;border-radius:14px;padding:13px;border:1.5px solid #f0c040;display:flex;gap:10px;align-items:flex-start;">
-          <i class="fas fa-exclamation-triangle" style="color:#b45b0a;font-size:1.1rem;margin-top:2px;flex-shrink:0;"></i>
-          <div>
-            <div style="font-weight:700;color:#5a3000;font-size:.85rem;margin-bottom:4px;">QR Code detectado — Ignorado</div>
-            <div style="font-size:.77rem;color:#7a4500;line-height:1.6;" id="qrWarningText"></div>
-            <div style="font-size:.72rem;color:#5a3000;margin-top:6px;font-style:italic;">Continue escaneando e aponte para o outro código do selo (geralmente abaixo do QR Code).</div>
+      <!-- ── Foto / Upload ── -->
+      <div id="spFoto" style="display:none;">
+        <div class="card">
+          <div class="card-hd"><i class="fas fa-image"></i> Foto ou Upload da Cédula</div>
+
+          <!-- Upload zone -->
+          <div class="upload-zone" id="uploadZone" style="display:block;">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>
+              <strong>Arraste a foto aqui</strong> ou clique para selecionar<br>
+              <span style="font-size:.72rem;">JPG · PNG · WEBP · BMP — máx. 10 MB</span>
+            </p>
+            <input type="file" id="inputFoto" accept="image/jpeg,image/png,image/webp,image/bmp,image/gif"
+              onchange="carregarImagem(this)">
+          </div>
+
+          <!-- Botão câmera nativa (captura) -->
+          <div style="text-align:center;margin:-4px 0 12px;font-size:.74rem;color:var(--muted);">— ou —</div>
+          <label class="btn btn-navy" style="cursor:pointer;margin-bottom:14px;">
+            <i class="fas fa-camera"></i> Tirar Foto com a Câmera
+            <input type="file" id="inputCaptura" accept="image/*" capture="environment"
+              style="display:none;" onchange="carregarImagem(this)">
+          </label>
+
+          <!-- Preview da imagem carregada -->
+          <div id="imgPreviewWrap" style="display:none;position:relative;" class="img-preview-wrap">
+            <img id="imgPreview" src="" alt="Cédula">
+            <canvas id="canvasOverlay"></canvas>
+            <div class="processing hidden" id="processingOverlay">
+              <div class="spin"></div>
+              <p>Processando imagem...</p>
+            </div>
+            <button class="img-clear-btn" onclick="limparImagem()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <div id="uploadActions" style="display:none;">
+            <div class="btn-row" style="margin-bottom:10px;">
+              <button class="btn btn-gold" onclick="lerImagemUpload()">
+                <i class="fas fa-search"></i> Ler Códigos da Imagem
+              </button>
+              <button class="btn btn-outline" onclick="limparImagem()">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            <p style="font-size:.7rem;color:var(--muted);text-align:center;line-height:1.5;">
+              A imagem é processada localmente no dispositivo — nenhum dado é enviado para servidores.
+            </p>
+          </div>
+        </div>
+
+        <!-- Resultado do upload -->
+        <div id="resFoto" style="display:none;">
+          <div class="card">
+            <div class="card-hd">
+              <i class="fas fa-microscope" style="color:var(--gold);"></i> Resultado da Análise
+              <button class="btn-copy" style="margin-left:auto;" onclick="copiarUltimoFoto()"><i class="fas fa-copy"></i> Copiar</button>
+            </div>
+            <div id="resFotoContent"></div>
           </div>
         </div>
       </div>
 
     </div>
 
-    <!-- ═══ MANUAL ═══ -->
+    <!-- ═══════ MANUAL ═══════ -->
     <div class="pane" id="pManual">
       <div class="card" style="margin-top:4px;">
-        <div class="card-hd"><i class="fas fa-paste"></i> Colar código / texto do selo</div>
-        <p style="font-size:.77rem;color:var(--muted);margin-bottom:10px;line-height:1.55;">
-          Cole aqui qualquer texto lido do selo INMETRO — código, URL, mensagem WhatsApp ou sequência alfanumérica.
+        <div class="card-hd"><i class="fas fa-paste"></i> Colar código da cédula</div>
+        <p style="font-size:.76rem;color:var(--muted);margin-bottom:10px;line-height:1.55;">
+          Cole aqui o texto/código lido da cédula — número de série, código de barras, Data Matrix ou qualquer sequência.
         </p>
-        <textarea class="ta" id="manualTa" placeholder="Exemplos:&#10;• 7898357412036&#10;• https://napalmadamao.inmetro.gov.br/...&#10;• BR001234567890&#10;• Oi, envie essa mensagem para receber informações sobre o produto UUID-AQUI"></textarea>
+        <textarea class="ta" id="manualTa" placeholder="Exemplos:&#10;• A1234567-8&#10;• 0010000050000000015&#10;• BC2025001234567&#10;• Qualquer código ou texto da cédula"></textarea>
         <div class="btn-row" style="margin-top:10px;">
-          <button class="btn btn-g" onclick="analisarManual()"><i class="fas fa-microscope"></i> Analisar</button>
-          <button class="btn btn-s" onclick="document.getElementById('manualTa').value='';document.getElementById('manualRes').style.display='none'">
+          <button class="btn btn-green" onclick="analisarManual()"><i class="fas fa-microscope"></i> Analisar</button>
+          <button class="btn btn-outline" onclick="document.getElementById('manualTa').value='';document.getElementById('manualRes').style.display='none'">
             <i class="fas fa-eraser"></i> Limpar
           </button>
         </div>
@@ -311,272 +413,401 @@ footer{padding:9px;text-align:center;font-size:.65rem;color:var(--muted);border-
       </div>
     </div>
 
-    <!-- ═══ LOG ═══ -->
+    <!-- ═══════ LOG ═══════ -->
     <div class="pane" id="pLog">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-        <div style="font-weight:700;font-size:.88rem;color:#13293D;"><i class="fas fa-list" style="color:#1E3B5A;margin-right:6px;"></i>Capturas (<span id="logTotal">0</span>)</div>
+        <div style="font-weight:700;font-size:.88rem;color:#13293D;">
+          <i class="fas fa-list" style="color:var(--navy2);margin-right:6px;"></i>
+          Capturas (<span id="logTotal">0</span>)
+        </div>
         <div style="display:flex;gap:7px;">
-          <button class="btn btn-sm btn-s" onclick="exportarLog()"><i class="fas fa-download"></i> Exportar JSON</button>
-          <button class="btn btn-sm" style="background:#fff;color:#c11f2f;border:1.5px solid #f5c6cb;" onclick="limparLog()"><i class="fas fa-trash"></i></button>
+          <button class="btn btn-sm btn-outline" onclick="exportarLog()"><i class="fas fa-download"></i> JSON</button>
+          <button class="btn btn-sm btn-outline" onclick="exportarTxt()"><i class="fas fa-file-alt"></i> TXT</button>
+          <button class="btn btn-sm btn-danger" onclick="limparLog()"><i class="fas fa-trash"></i></button>
         </div>
       </div>
       <div class="card">
         <div id="logLista">
-          <div class="empty"><i class="fas fa-qrcode"></i><p>Nenhuma leitura registrada ainda.<br>Escaneie selos INMETRO para popular o log.</p></div>
+          <div class="empty"><i class="fas fa-money-bill"></i><p>Nenhuma leitura registrada.<br>Escaneie uma cédula para popular o log.</p></div>
         </div>
       </div>
     </div>
 
-    <!-- ═══ SOBRE ═══ -->
+    <!-- ═══════ SOBRE ═══════ -->
     <div class="pane" id="pSobre">
       <div class="card" style="margin-top:4px;">
-        <div class="card-hd"><i class="fas fa-info-circle"></i> Contexto técnico</div>
+        <div class="card-hd"><i class="fas fa-university"></i> Banco Central do Brasil</div>
 
-        <div class="info-blk amarelo">
-          <strong><i class="fas fa-exclamation-triangle"></i> Por que o QR Code é ignorado?</strong>
+        <div class="info-blk gold">
+          <strong><i class="fas fa-money-bill-wave"></i> Cédulas do Real — elementos de segurança lidos</strong>
           <ul>
-            <li>O QR Code do selo INMETRO (Portaria 314/2025) contém <strong>apenas</strong> o link para baixar o app oficial</li>
-            <li>Exemplo do conteúdo: <code style="background:rgba(0,0,0,.1);padding:1px 5px;border-radius:4px;font-size:.78rem;">https://napalmadamao.inmetro.gov.br/</code></li>
-            <li>O UUID do produto aparece na <strong>mensagem WhatsApp</strong> gerada pelo app oficial</li>
+            <li><strong>Número de série:</strong> sequência alfanumérica única por cédula (ex: <code>A1234567-8</code>)</li>
+            <li><strong>Data Matrix:</strong> código 2D compacto presente em cédulas mais recentes</li>
+            <li><strong>Code 128 / Code 39:</strong> barcode linear com dados da série</li>
+            <li><strong>QR Code:</strong> em algumas séries, link para verificação BCB</li>
+            <li><strong>ITF / EAN:</strong> possíveis em embalagens de pacotes</li>
           </ul>
         </div>
 
-        <div class="info-blk azul">
-          <strong><i class="fas fa-search"></i> O que este app faz</strong>
+        <div class="info-blk blue">
+          <strong><i class="fas fa-camera"></i> Modo Foto / Upload</strong>
           <ul>
-            <li>Lê <strong>todos os formatos</strong> exceto QR Code</li>
-            <li>Captura o texto bruto <strong>completo</strong> de cada código</li>
-            <li>Analisa padrão: numérico, alfanumérico, UUID, URL, EAN</li>
-            <li>Registra comprimento, encoding e formato detectado</li>
-            <li>Salva um log completo exportável em JSON</li>
+            <li>Tire uma foto diretamente com a câmera do dispositivo</li>
+            <li>Ou faça upload de foto já tirada</li>
+            <li>A imagem é processada <strong>100% local</strong> — sem envio para servidores</li>
+            <li>Melhor resultado: boa iluminação, foco, cédula plana</li>
+            <li>Tente tanto a frente quanto o verso da cédula</li>
           </ul>
         </div>
 
-        <div class="info-blk verde">
-          <strong><i class="fas fa-road"></i> Próximo passo</strong>
+        <div class="info-blk green">
+          <strong><i class="fas fa-road"></i> Objetivo do protótipo</strong>
           <ul>
-            <li>Escaneie selos reais e exporte o log</li>
-            <li>Analise quais formatos o leitor consegue ler</li>
-            <li>Identifique qual código contém o identificador único do produto</li>
-            <li>Integre ao PCI Manager usando esse campo específico</li>
+            <li>Descobrir quais formatos o leitor consegue detectar</li>
+            <li>Identificar qual campo contém o número único da cédula</li>
+            <li>Exportar o log para análise e decisão de integração</li>
           </ul>
         </div>
-      </div>
 
-      <div class="card">
-        <div class="card-hd"><i class="fas fa-cogs"></i> Stack técnica</div>
-        <p style="font-size:.78rem;color:var(--muted);line-height:2;font-family:var(--mono);">
-          html5-qrcode@2.3.8<br>
-          Html5QrcodeSupportedFormats API<br>
-          getUserMedia (câmera nativa)<br>
-          Torch API (lanterna)
-        </p>
+        <div class="info-blk yellow">
+          <strong><i class="fas fa-lightbulb"></i> Dicas de leitura</strong>
+          <ul>
+            <li>Use <strong>Câmera ao Vivo</strong> para leitura rápida em tempo real</li>
+            <li>Use <strong>Foto/Upload</strong> quando a leitura ao vivo não funcionar</li>
+            <li>Na foto, aproxime bem e mantenha foco no código específico</li>
+            <li>O verso das cédulas recentes costuma ter mais elementos de máquina</li>
+          </ul>
+        </div>
       </div>
     </div>
 
   </div><!-- /content -->
 
-  <footer><i class="fas fa-shield-alt"></i> INMETRO Diagnóstico v1.0 · Protótipo PCI</footer>
+  <footer><i class="fas fa-university"></i> BCB Leitor de Cédulas · Protótipo v1.0</footer>
 </div>
 
 <!-- NOTIF -->
 <div class="notif" id="notif" style="display:none;">
-  <i id="notifIco"></i><span id="notifMsg"></span>
+  <i id="notifIco" style="font-size:1rem;"></i>
+  <span id="notifMsg"></span>
 </div>
 
 <script>
 'use strict';
 
-// ═══════════ ESTADO ═══════════
-let reader   = null;
-let scanning = false;
-let flashOn  = false;
-let ntTimer  = null;
-let ultimoRaw = '';
-let log = JSON.parse(localStorage.getItem('inmetro_diag_log') || '[]');
-let qrWarnTimer = null;
+// ═══════════════════ ESTADO ═══════════════════
+let reader     = null;
+let scanning   = false;
+let flashOn    = false;
+let ntTimer    = null;
+let ultimoRaw  = '';
+let ultimoFoto = '';
+let log = JSON.parse(localStorage.getItem('bcb_scanner_log') || '[]');
 
-// ═══════════ TABS ═══════════
+// ═══════════════════ TABS ═══════════════════
 function goTab(t) {
-  ['Scanner','Manual','Log','Sobre'].forEach(x => {
+  ['Leitor','Manual','Log','Sobre'].forEach(x => {
     document.getElementById('t'+x).classList.remove('on');
     document.getElementById('p'+x).classList.remove('on');
   });
   document.getElementById('t'+t).classList.add('on');
   document.getElementById('p'+t).classList.add('on');
-  if (t !== 'Scanner') stopScanner();
+  if (t !== 'Leitor') stopScanner();
   if (t === 'Log') renderLog();
 }
 
-// ═══════════ FORMATOS ═══════════
+// ── Sub-tabs Câmera / Foto ──
+function goStab(s) {
+  ['Camera','Foto'].forEach(x => {
+    document.getElementById('st'+x).classList.remove('on');
+    document.getElementById('sp'+x).style.display = 'none';
+  });
+  document.getElementById('st'+s).classList.add('on');
+  document.getElementById('sp'+s).style.display = 'block';
+  if (s !== 'Camera') stopScanner();
+}
+
+// ═══════════════════ FORMATOS ═══════════════════
 function getFormatos() {
   const map = {
+    QR_CODE:     Html5QrcodeSupportedFormats.QR_CODE,
     DATA_MATRIX: Html5QrcodeSupportedFormats.DATA_MATRIX,
-    AZTEC:       Html5QrcodeSupportedFormats.AZTEC,
-    PDF_417:     Html5QrcodeSupportedFormats.PDF_417,
     CODE_128:    Html5QrcodeSupportedFormats.CODE_128,
     CODE_39:     Html5QrcodeSupportedFormats.CODE_39,
+    AZTEC:       Html5QrcodeSupportedFormats.AZTEC,
+    PDF_417:     Html5QrcodeSupportedFormats.PDF_417,
     EAN_13:      Html5QrcodeSupportedFormats.EAN_13,
     ITF:         Html5QrcodeSupportedFormats.ITF,
   };
-  // QR_CODE intencionalmente ausente
   return [...document.querySelectorAll('#fmtList input:checked')]
-    .map(cb => map[cb.value])
-    .filter(Boolean);
+    .map(cb => map[cb.value]).filter(Boolean);
 }
 
-// ═══════════ SCANNER ═══════════
+function toggleFmt(cb) {
+  const lbl = cb.closest('label');
+  if (!cb.checked) { lbl.style.opacity = '.45'; }
+  else             { lbl.style.opacity = '1'; }
+}
+
+// ═══════════════════ SCANNER AO VIVO ═══════════════════
 async function startScanner() {
   try {
     const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
     s.getTracks().forEach(t => t.stop());
-  } catch(e) {
-    notif('Sem permissão de câmera', 'error'); return;
-  }
+  } catch(e) { notif('Sem permissão de câmera', 'error'); return; }
 
-  document.getElementById('qr-reader').style.display = 'block';
-  document.getElementById('camIdle').style.display   = 'none';
-  document.getElementById('camOverlay').style.display = 'block';
-  document.getElementById('camLabel').style.display  = 'block';
-
-  reader = new Html5Qrcode('qr-reader', { verbose: false });
+  document.getElementById('bcb-reader').style.display = 'block';
+  document.getElementById('camIdle').style.display    = 'none';
+  document.getElementById('camGuide').style.display   = 'block';
+  document.getElementById('camStatus').style.display  = 'block';
+  document.getElementById('camBadge').textContent     = 'Ativo';
+  document.getElementById('camBadge').style.background = '#DFF0E4';
+  document.getElementById('camBadge').style.color = '#0e4d24';
 
   const fmts = getFormatos();
   if (!fmts.length) { notif('Selecione ao menos um formato', 'warning'); return; }
+
+  reader = new Html5Qrcode('bcb-reader', { verbose: false });
 
   try {
     await reader.start(
       { facingMode: 'environment' },
       {
         fps: 15,
-        qrbox: { width: 260, height: 260 },
-        aspectRatio: 1.0,
+        qrbox: { width: 280, height: 160 },  // retangular para cédulas
+        aspectRatio: 16/9,
         formatsToSupport: fmts,
         experimentalFeatures: { useBarCodeDetectorIfSupported: true },
         videoConstraints: {
           facingMode: { ideal: 'environment' },
-          width: { ideal: 1280 }, height: { ideal: 1280 }
+          width: { ideal: 1920 }, height: { ideal: 1080 }
         }
       },
       (decoded, result) => {
+        if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
         const fmt = result?.result?.format?.formatName || 'DESCONHECIDO';
-        // ── FILTRO DE SEGURANÇA: se por algum motivo entrar QR Code, ignora ──
-        if (fmt === 'QR_CODE') {
-          mostrarAvisoQR(decoded);
-          return;
-        }
-        if (navigator.vibrate) navigator.vibrate([60, 30, 60]);
-        onLeitura(decoded, fmt);
+        processarLeitura(decoded, fmt, 'camera_vivo');
+        document.getElementById('camStatus').textContent = '✅ Código detectado!';
+        setTimeout(() => {
+          if (scanning) document.getElementById('camStatus').textContent = 'Escaneando...';
+        }, 2000);
       },
-      () => {} // silencia erros por frame
+      () => {}
     );
 
     scanning = true;
     document.getElementById('btnStart').style.display = 'none';
     document.getElementById('btnStop').style.display  = 'flex';
-    notif('Scanner ativo — aponte para o código do selo', 'success');
+    notif('Scanner ativo — enquadre a cédula', 'success');
 
   } catch(e) {
     resetCam();
-    notif('Erro câmera: ' + e.message, 'error');
+    notif('Erro: ' + e.message, 'error');
   }
 }
 
 function stopScanner() {
   if (reader && scanning) {
-    reader.stop().then(() => {
-      scanning = false;
-      resetCam();
-    }).catch(() => {});
+    reader.stop().then(() => { scanning = false; resetCam(); }).catch(() => {});
   }
 }
 
 function resetCam() {
   scanning = false;
-  try { document.getElementById('qr-reader').style.display  = 'none'; } catch{}
-  try { document.getElementById('qr-reader').innerHTML      = ''; } catch{}
-  try { document.getElementById('camIdle').style.display    = 'flex'; } catch{}
-  try { document.getElementById('camOverlay').style.display = 'none'; } catch{}
-  try { document.getElementById('camLabel').style.display   = 'none'; } catch{}
-  try { document.getElementById('btnStart').style.display   = 'flex'; } catch{}
-  try { document.getElementById('btnStop').style.display    = 'none'; } catch{}
+  try { document.getElementById('bcb-reader').style.display  = 'none'; } catch{}
+  try { document.getElementById('bcb-reader').innerHTML      = ''; } catch{}
+  try { document.getElementById('camIdle').style.display     = 'flex'; } catch{}
+  try { document.getElementById('camGuide').style.display    = 'none'; } catch{}
+  try { document.getElementById('camStatus').style.display   = 'none'; } catch{}
+  try { document.getElementById('btnStart').style.display    = 'flex'; } catch{}
+  try { document.getElementById('btnStop').style.display     = 'none'; } catch{}
+  try { document.getElementById('camBadge').textContent      = 'Parado'; } catch{}
+  try { document.getElementById('camBadge').style.background = '#E8F0FB'; } catch{}
+  try { document.getElementById('camBadge').style.color      = '#1a3b5d'; } catch{}
   flashOn = false;
-  document.getElementById('btnFlash').style.color = '';
+  try { document.getElementById('btnFlash').style.color = ''; } catch{}
 }
 
 async function toggleFlash() {
   if (!scanning) { notif('Inicie o scanner primeiro', 'warning'); return; }
   try {
-    const vid = document.querySelector('#qr-reader video');
+    const vid = document.querySelector('#bcb-reader video');
     if (!vid?.srcObject) return;
     const track = vid.srcObject.getVideoTracks()[0];
     if (!track.getCapabilities().torch) { notif('Lanterna não disponível', 'warning'); return; }
     flashOn = !flashOn;
     await track.applyConstraints({ advanced: [{ torch: flashOn }] });
-    document.getElementById('btnFlash').style.color = flashOn ? '#f59e0b' : '';
+    document.getElementById('btnFlash').style.color = flashOn ? '#C9A227' : '';
     notif(flashOn ? 'Lanterna ligada' : 'Lanterna desligada', 'info');
   } catch { notif('Lanterna indisponível', 'warning'); }
 }
 
-// ── Aviso quando QR Code é detectado apesar do filtro ──
-function mostrarAvisoQR(raw) {
-  const w = document.getElementById('qrWarning');
-  const txt = document.getElementById('qrWarningText');
-  const preview = raw.length > 80 ? raw.substring(0, 77) + '...' : raw;
-  txt.innerHTML = `Conteúdo detectado: <strong style="font-family:var(--mono);font-size:.75rem;">${escHtml(preview)}</strong><br>
-    <span style="color:#7a4500;">Este é o link do app INMETRO — não contém dados do produto.</span>`;
-  w.style.display = 'block';
-  if (qrWarnTimer) clearTimeout(qrWarnTimer);
-  qrWarnTimer = setTimeout(() => { w.style.display = 'none'; }, 6000);
+// ═══════════════════ UPLOAD / FOTO ═══════════════════
+function carregarImagem(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { notif('Imagem muito grande (máx. 10 MB)', 'error'); return; }
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img  = document.getElementById('imgPreview');
+    const wrap = document.getElementById('imgPreviewWrap');
+    const zone = document.getElementById('uploadZone');
+    const acts = document.getElementById('uploadActions');
+
+    img.src = e.target.result;
+    img.onload = () => {
+      // Ajusta o canvas overlay ao tamanho real da imagem
+      const canvas = document.getElementById('canvasOverlay');
+      canvas.width  = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.style.width  = '100%';
+      canvas.style.height = '100%';
+    };
+    zone.style.display = 'none';
+    wrap.style.display = 'block';
+    acts.style.display = 'block';
+    document.getElementById('resFoto').style.display = 'none';
+    notif('Imagem carregada — clique em Ler Códigos', 'success');
+  };
+  reader.readAsDataURL(file);
 }
 
-// ═══════════ PROCESSAR LEITURA ═══════════
-function onLeitura(raw, formato) {
+function limparImagem() {
+  document.getElementById('imgPreview').src = '';
+  document.getElementById('imgPreviewWrap').style.display = 'none';
+  document.getElementById('uploadActions').style.display  = 'none';
+  document.getElementById('uploadZone').style.display     = 'block';
+  document.getElementById('resFoto').style.display        = 'none';
+  document.getElementById('inputFoto').value    = '';
+  document.getElementById('inputCaptura').value = '';
+  const canvas = document.getElementById('canvasOverlay');
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+}
+
+async function lerImagemUpload() {
+  const img = document.getElementById('imgPreview');
+  if (!img.src || img.src === window.location.href) { notif('Carregue uma imagem primeiro', 'warning'); return; }
+
+  const overlay = document.getElementById('processingOverlay');
+  overlay.classList.remove('hidden');
+
+  // Usa Html5Qrcode para ler a imagem estática
+  const fmts = getFormatos().length ? getFormatos() :
+    ['QR_CODE','DATA_MATRIX','CODE_128','CODE_39','AZTEC','PDF_417','EAN_13','ITF']
+      .map(k => Html5QrcodeSupportedFormats[k]).filter(Boolean);
+
+  const tempReader = new Html5Qrcode('_tmp_reader_hidden');
+  const blob = await dataURLtoBlob(img.src);
+  const file = new File([blob], 'cedula.jpg', { type: 'image/jpeg' });
+
+  try {
+    const result = await tempReader.scanFile(file, false);
+    overlay.classList.add('hidden');
+    const raw = typeof result === 'string' ? result : (result?.decodedText || JSON.stringify(result));
+    ultimoFoto = raw;
+    // Formato: tenta detectar pelo conteúdo
+    const fmt = detectarFormatoImg(raw);
+    processarLeitura(raw, fmt, 'foto_upload');
+    document.getElementById('resFoto').style.display = 'block';
+    document.getElementById('resFotoContent').innerHTML = buildResultHTML(analisar(raw, fmt), raw, fmt);
+    notif('Código encontrado na imagem!', 'success');
+    desenharMarquee(raw);
+  } catch(e) {
+    overlay.classList.add('hidden');
+    // Nenhum código encontrado — mostra diagnóstico
+    document.getElementById('resFoto').style.display = 'block';
+    document.getElementById('resFotoContent').innerHTML = buildSemCodigo();
+    notif('Nenhum código detectado — veja dicas abaixo', 'warning');
+  }
+}
+
+function detectarFormatoImg(raw) {
+  if (/^https?:\/\//i.test(raw)) return 'QR_CODE';
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}/i.test(raw)) return 'QR_CODE';
+  if (/^\d{13}$/.test(raw)) return 'EAN_13';
+  if (/^[A-Z0-9\-]{6,20}$/.test(raw)) return 'CODE_128';
+  return 'DESCONHECIDO';
+}
+
+function dataURLtoBlob(dataURL) {
+  return fetch(dataURL).then(r => r.blob());
+}
+
+function desenharMarquee(raw) {
+  // Destaque visual na imagem (borda verde)
+  const img    = document.getElementById('imgPreview');
+  const canvas = document.getElementById('canvasOverlay');
+  const ctx    = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#1a7c3e';
+  ctx.lineWidth   = Math.max(canvas.width / 200, 3);
+  ctx.strokeRect(canvas.width * 0.05, canvas.height * 0.05,
+                 canvas.width * 0.9,  canvas.height * 0.9);
+  ctx.fillStyle = 'rgba(26,124,62,0.08)';
+  ctx.fillRect(canvas.width * 0.05, canvas.height * 0.05,
+               canvas.width * 0.9,  canvas.height * 0.9);
+}
+
+function buildSemCodigo() {
+  return `<div class="res-card warn">
+    <div class="res-lbl">Resultado</div>
+    <div style="font-size:.84rem;color:#5a3000;line-height:1.7;font-weight:500;">
+      Nenhum código legível foi encontrado na imagem.
+    </div>
+  </div>
+  <div class="info-blk yellow">
+    <strong><i class="fas fa-lightbulb"></i> Dicas para melhorar a leitura:</strong>
+    <ul>
+      <li>Aproxime mais a câmera do código específico (não da cédula inteira)</li>
+      <li>Boa iluminação — evite sombras e reflexos</li>
+      <li>Mantenha a cédula plana e sem dobras na área do código</li>
+      <li>Tente o <strong>verso</strong> da cédula — geralmente tem mais elementos de máquina</li>
+      <li>Tente o <strong>Scanner ao Vivo</strong> — lê em tempo real com mais tentativas</li>
+      <li>Experimente desabilitar alguns formatos para focar apenas em Code 128 ou Data Matrix</li>
+    </ul>
+  </div>`;
+}
+
+// ═══════════════════ PROCESSAR LEITURA ═══════════════════
+function processarLeitura(raw, formato, origem) {
   ultimoRaw = raw;
   const analise = analisar(raw, formato);
 
-  // Salva no log
-  const entry = { ts: new Date().toISOString(), raw, formato, analise };
+  const entry = { ts: new Date().toISOString(), raw, formato, origem, analise };
   log.unshift(entry);
-  if (log.length > 200) log.pop();
+  if (log.length > 300) log.pop();
   salvarLog();
-  document.getElementById('logBadge').textContent = log.length;
-  document.getElementById('logTotal').textContent = log.length;
+  atualizarBadgeLog();
 
-  // Mostra resultado
-  document.getElementById('resArea').style.display = 'block';
-  document.getElementById('resContent').innerHTML  = buildHTML(analise, raw, formato);
-  document.getElementById('qrWarning').style.display = 'none';
-  notif('Código lido! Formato: ' + formato, 'success');
+  // Mostra no painel ao vivo
+  document.getElementById('resVivo').style.display = 'block';
+  document.getElementById('resVivoContent').innerHTML = buildResultHTML(analise, raw, formato);
 }
 
-// ═══════════ ANÁLISE ═══════════
+// ═══════════════════ ANÁLISE ═══════════════════
 function analisar(raw, formato) {
   const txt = (raw || '').trim();
   const r = {
-    comprimento:    txt.length,
+    comprimento: txt.length,
     formato,
-    tipo:           'desconhecido',
-    uuid:           null,
-    url:            null,
-    urlDominio:     null,
-    codigoSelo:     null,   // identificador principal — a descobrir
-    aposProuduto:   null,
-    soNumeros:      /^\d+$/.test(txt),
-    soAlfa:         /^[A-Z0-9\-]+$/i.test(txt),
-    ean:            null,
-    encoding:       detectEncoding(txt),
-    padroes:        [],
-    raw:            txt
+    tipo: 'desconhecido',
+    uuid: null,
+    url: null,
+    urlDominio: null,
+    serieCedula: null,
+    codigoBCB: null,
+    ean: null,
+    soNumeros: /^\d+$/.test(txt),
+    soAlfa:    /^[A-Z0-9\-\.\/\s]+$/i.test(txt),
+    encoding:  detectEncoding(txt),
+    padroes:   [],
+    raw:       txt
   };
 
   // ── UUID ──
   const mUuid = txt.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
-  if (mUuid) { r.uuid = mUuid[0]; r.padroes.push('UUID_36'); }
-
-  // ── Após "produto" (mensagem WhatsApp) ──
-  const mProd = txt.match(/produto\s+([^\s]+)/i);
-  if (mProd) { r.aposProuduto = mProd[1]; r.padroes.push('MSG_WHATSAPP'); }
+  if (mUuid) { r.uuid = mUuid[0]; r.padroes.push('UUID'); }
 
   // ── URL ──
   const mUrl = txt.match(/https?:\/\/[^\s]+/i);
@@ -584,36 +815,34 @@ function analisar(raw, formato) {
     r.url = mUrl[0];
     try { r.urlDominio = new URL(mUrl[0]).hostname; } catch {}
     r.padroes.push('URL');
-    if (txt.toLowerCase().includes('inmetro')) r.padroes.push('URL_INMETRO');
+    if (/bcb\.gov\.br|bancocentral/i.test(txt)) r.padroes.push('URL_BCB');
   }
 
-  // ── EAN-13 (13 dígitos, verificação de check digit) ──
-  if (/^\d{13}$/.test(txt) && validarEAN13(txt)) {
-    r.ean = txt; r.padroes.push('EAN_13_VALIDO');
-  } else if (/^\d{8}$/.test(txt)) {
-    r.padroes.push('EAN_8');
-  }
+  // ── Série de cédula BCB: letra(s) + dígitos + hífen + dígito verificador ──
+  // Formatos conhecidos: A1234567-8 / AA12345678 / BC-1234567-89
+  const mSerie = txt.match(/\b([A-Z]{1,3}[\-\s]?\d{5,9}[\-\s]?\d{1,2})\b/i);
+  if (mSerie) { r.serieCedula = mSerie[1].replace(/[\s]/g,''); r.padroes.push('SERIE_CEDULA'); }
 
-  // ── Código alfanumérico curto (possível ID de produto) ──
-  if (/^[A-Z]{2,4}\d{6,}/i.test(txt)) r.padroes.push('CODIGO_PRODUTO');
-  if (/^\d{6,20}$/.test(txt))          r.padroes.push('NUMERICO_LONGO');
-  if (txt.length >= 6 && txt.length <= 30 && /^[A-Z0-9\-\.\/]+$/i.test(txt)) r.padroes.push('ALFA_CURTO');
+  // ── Código longo BCB (19 dígitos típico do barcode) ──
+  const mBCB = txt.match(/\b\d{15,22}\b/);
+  if (mBCB) { r.codigoBCB = mBCB[0]; r.padroes.push('CODIGO_LONGO_BCB'); }
 
-  // ── Tipo geral ──
-  if (r.uuid)         r.tipo = 'uuid';
-  else if (r.url)     r.tipo = 'url';
-  else if (r.ean)     r.tipo = 'ean13';
-  else if (r.soNumeros && txt.length >= 6) r.tipo = 'numerico';
-  else if (r.soAlfa)  r.tipo = 'alfanumerico';
-  else                r.tipo = 'texto_misto';
+  // ── EAN-13 ──
+  if (/^\d{13}$/.test(txt) && validarEAN13(txt)) { r.ean = txt; r.padroes.push('EAN_13_VALIDO'); }
 
-  // ── Candidato a código do selo ──
-  // Preferência: uuid > código alfanumérico curto > numérico longo > raw
-  if      (r.uuid)                           r.codigoSelo = r.uuid;
-  else if (r.padroes.includes('CODIGO_PRODUTO')) r.codigoSelo = txt;
-  else if (r.ean)                            r.codigoSelo = txt;
-  else if (r.soNumeros && txt.length >= 8)   r.codigoSelo = txt;
-  else if (r.soAlfa && txt.length <= 40)     r.codigoSelo = txt;
+  // ── Alfanumérico curto ──
+  if (txt.length >= 4 && txt.length <= 30 && /^[A-Z0-9\-]+$/i.test(txt))
+    r.padroes.push('ALFA_CURTO');
+
+  // ── Tipo ──
+  if (r.uuid)            r.tipo = 'uuid';
+  else if (r.url)        r.tipo = 'url';
+  else if (r.serieCedula) r.tipo = 'serie_cedula';
+  else if (r.ean)        r.tipo = 'ean13';
+  else if (r.codigoBCB)  r.tipo = 'codigo_bcb';
+  else if (r.soNumeros)  r.tipo = 'numerico';
+  else if (r.soAlfa)     r.tipo = 'alfanumerico';
+  else                   r.tipo = 'texto_misto';
 
   return r;
 }
@@ -626,189 +855,195 @@ function detectEncoding(txt) {
 
 function validarEAN13(code) {
   const d = code.split('').map(Number);
-  const sum = d.slice(0, 12).reduce((acc, v, i) => acc + (i % 2 === 0 ? v : v * 3), 0);
-  return (10 - (sum % 10)) % 10 === d[12];
+  const s = d.slice(0, 12).reduce((a, v, i) => a + (i % 2 === 0 ? v : v * 3), 0);
+  return (10 - (s % 10)) % 10 === d[12];
 }
 
-// ═══════════ BUILD HTML RESULTADO ═══════════
-function buildHTML(a, raw, fmt) {
-  const fmtClass = {
-    DATA_MATRIX: 'fb-dm', AZTEC: 'fb-aztec', PDF_417: 'fb-pdf',
-    CODE_128: 'fb-c128', CODE_39: 'fb-c39', EAN_13: 'fb-ean',
-    ITF: 'fb-ean', DESCONHECIDO: 'fb-other', MANUAL_INPUT: 'fb-other'
-  }[fmt] || 'fb-other';
+// ═══════════════════ BUILD HTML RESULTADO ═══════════════════
+function buildResultHTML(a, raw, fmt) {
+  const fmtMeta = {
+    QR_CODE:     { cls:'ft-ean', icon:'fas fa-qrcode',   label:'QR Code' },
+    DATA_MATRIX: { cls:'ft-dm',  icon:'fas fa-th',        label:'Data Matrix' },
+    CODE_128:    { cls:'ft-c128',icon:'fas fa-barcode',   label:'Code 128' },
+    CODE_39:     { cls:'ft-c39', icon:'fas fa-barcode',   label:'Code 39' },
+    AZTEC:       { cls:'ft-aztec',icon:'fas fa-asterisk', label:'Aztec' },
+    PDF_417:     { cls:'ft-pdf', icon:'fas fa-barcode',   label:'PDF 417' },
+    EAN_13:      { cls:'ft-ean', icon:'fas fa-barcode',   label:'EAN-13' },
+    ITF:         { cls:'ft-ean', icon:'fas fa-barcode',   label:'ITF' },
+    DESCONHECIDO:{ cls:'ft-other',icon:'fas fa-question', label:fmt },
+    MANUAL_INPUT:{ cls:'ft-other',icon:'fas fa-keyboard', label:'Manual' },
+  };
+  const fm = fmtMeta[fmt] || fmtMeta['DESCONHECIDO'];
 
-  const fmtIcon = {
-    DATA_MATRIX:'fas fa-th', AZTEC:'fas fa-asterisk', PDF_417:'fas fa-barcode',
-    CODE_128:'fas fa-barcode', CODE_39:'fas fa-barcode', EAN_13:'fas fa-barcode',
-    ITF:'fas fa-barcode'
-  }[fmt] || 'fas fa-question-circle';
+  let h = `<div class="fmt-tag ${fm.cls}"><i class="${fm.icon}"></i> ${fm.label}</div>`;
 
-  let h = `<div class="fmt-badge ${fmtClass}"><i class="${fmtIcon}"></i> ${fmt}</div>`;
-
-  // Código do selo (candidato)
-  if (a.codigoSelo) {
-    h += `<div class="res-box success">
-      <div class="res-lbl"><i class="fas fa-tag"></i> Candidato a código do selo</div>
-      <div class="res-val">${escHtml(a.codigoSelo)}</div>
-    </div>`;
+  // Destaque: série da cédula
+  if (a.serieCedula) {
+    h += `<div class="cedula-badge cb-green"><i class="fas fa-tag"></i> Série da Cédula: ${escHtml(a.serieCedula)}</div><br>`;
+  }
+  // Destaque: código longo BCB
+  if (a.codigoBCB && a.codigoBCB !== raw) {
+    h += `<div class="cedula-badge cb-blue"><i class="fas fa-hashtag"></i> Código BCB: ${escHtml(a.codigoBCB)}</div><br>`;
+  }
+  // EAN
+  if (a.ean) {
+    h += `<div class="cedula-badge cb-gold"><i class="fas fa-barcode"></i> EAN-13 válido: ${escHtml(a.ean)}</div><br>`;
+  }
+  // URL BCB
+  if (a.padroes.includes('URL_BCB')) {
+    h += `<div class="cedula-badge cb-green"><i class="fas fa-check-circle"></i> URL BCB oficial</div><br>`;
   }
 
-  // Grid
-  h += `<div class="grid-2">
-    <div class="a-cell">
-      <div class="a-cell-lbl">Comprimento</div>
-      <div class="a-cell-val info">${a.comprimento} chars</div>
+  // Grid analítico
+  h += `<div class="ag" style="margin-top:10px;">
+    <div class="ag-cell">
+      <div class="ag-lbl">Comprimento</div>
+      <div class="ag-val info">${a.comprimento} chars</div>
     </div>
-    <div class="a-cell">
-      <div class="a-cell-lbl">Tipo</div>
-      <div class="a-cell-val info">${a.tipo}</div>
+    <div class="ag-cell">
+      <div class="ag-lbl">Tipo detectado</div>
+      <div class="ag-val info">${a.tipo}</div>
     </div>
-    <div class="a-cell">
-      <div class="a-cell-lbl">Encoding</div>
-      <div class="a-cell-val">${a.encoding}</div>
+    <div class="ag-cell">
+      <div class="ag-lbl">Encoding</div>
+      <div class="ag-val">${a.encoding}</div>
     </div>
-    <div class="a-cell">
-      <div class="a-cell-lbl">Só números?</div>
-      <div class="a-cell-val ${a.soNumeros ? 'green' : ''}">${a.soNumeros ? 'Sim' : 'Não'}</div>
+    <div class="ag-cell">
+      <div class="ag-lbl">Padrões</div>
+      <div class="ag-val ${a.padroes.length ? 'green' : ''}" style="font-size:.74rem;">
+        ${a.padroes.join(' · ') || '—'}
+      </div>
     </div>`;
 
   if (a.uuid) {
-    h += `<div class="a-cell span2 highlight">
-      <div class="a-cell-lbl">✅ UUID extraído</div>
-      <div class="a-cell-val">${escHtml(a.uuid)}</div>
-    </div>`;
-  }
-  if (a.ean) {
-    h += `<div class="a-cell span2 highlight">
-      <div class="a-cell-lbl">✅ EAN-13 válido</div>
-      <div class="a-cell-val">${escHtml(a.ean)}</div>
+    h += `<div class="ag-cell hilite s2">
+      <div class="ag-lbl">UUID</div>
+      <div class="ag-val">${escHtml(a.uuid)}</div>
     </div>`;
   }
   if (a.url) {
-    h += `<div class="a-cell span2">
-      <div class="a-cell-lbl">🔗 URL</div>
-      <div class="a-cell-val" style="font-size:.75rem;">${escHtml(a.url)}</div>
+    h += `<div class="ag-cell s2">
+      <div class="ag-lbl">URL</div>
+      <div class="ag-val" style="font-size:.74rem;">${escHtml(a.url.substring(0,80))}${a.url.length>80?'...':''}</div>
     </div>`;
   }
-  if (a.padroes.length) {
-    h += `<div class="a-cell span2">
-      <div class="a-cell-lbl">Padrões detectados</div>
-      <div class="a-cell-val info">${a.padroes.join(' · ')}</div>
-    </div>`;
-  }
-  h += `</div>`;
+  h += '</div>';
 
   // Texto bruto
-  h += `<div style="font-size:.67rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">
+  h += `<div style="font-size:.65rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">
     <i class="fas fa-align-left"></i> Texto bruto completo
   </div>
-  <div class="res-box info" style="background:#F0F5FF;">
-    <div class="res-val" style="font-size:.8rem;">${escHtml(raw)}</div>
+  <div class="res-card info" style="border-radius:14px;padding:12px;">
+    <div class="res-val" style="font-size:.82rem;line-height:1.7;">${escHtml(raw)}</div>
   </div>`;
 
   return h;
 }
 
-// ═══════════ ANÁLISE MANUAL ═══════════
+// ═══════════════════ ANÁLISE MANUAL ═══════════════════
 function analisarManual() {
   const txt = document.getElementById('manualTa').value.trim();
   if (!txt) { notif('Cole algum texto primeiro', 'warning'); return; }
-
   const analise = analisar(txt, 'MANUAL_INPUT');
-  const entry   = { ts: new Date().toISOString(), raw: txt, formato: 'MANUAL_INPUT', analise };
+  const entry   = { ts: new Date().toISOString(), raw: txt, formato: 'MANUAL_INPUT', origem: 'manual', analise };
   log.unshift(entry);
-  if (log.length > 200) log.pop();
+  if (log.length > 300) log.pop();
   salvarLog();
-  document.getElementById('logBadge').textContent = log.length;
-  document.getElementById('logTotal').textContent = log.length;
-
-  document.getElementById('manualRes').style.display = 'block';
-  document.getElementById('manualResContent').innerHTML = buildHTML(analise, txt, 'MANUAL_INPUT');
+  atualizarBadgeLog();
+  document.getElementById('manualRes').style.display    = 'block';
+  document.getElementById('manualResContent').innerHTML = buildResultHTML(analise, txt, 'MANUAL_INPUT');
   notif('Análise concluída', 'success');
 }
 
-// ═══════════ LOG ═══════════
+// ═══════════════════ LOG ═══════════════════
 function renderLog() {
   const el = document.getElementById('logLista');
   document.getElementById('logTotal').textContent = log.length;
   if (!log.length) {
-    el.innerHTML = '<div class="empty"><i class="fas fa-qrcode"></i><p>Nenhuma leitura registrada.<br>Escaneie selos para popular o log.</p></div>';
+    el.innerHTML = '<div class="empty"><i class="fas fa-money-bill"></i><p>Nenhuma leitura registrada.<br>Escaneie uma cédula para popular o log.</p></div>';
     return;
   }
 
-  const fmtColors = {
-    DATA_MATRIX:'#EDE9FE;color:#5b21b6', CODE_128:'#FEF3C7;color:#92400e',
-    CODE_39:'#FFF7ED;color:#c2410c', AZTEC:'#ECFDF5;color:#065f46',
-    PDF_417:'#EFF6FF;color:#1d4ed8', EAN_13:'#F0FDF4;color:#166534',
-    ITF:'#F0FDF4;color:#166534', MANUAL_INPUT:'#F8FAFC;color:#6B7A8F',
-    DESCONHECIDO:'#F8FAFC;color:#6B7A8F'
-  };
+  const origemIcon = { camera_vivo:'fas fa-video', foto_upload:'fas fa-image', manual:'fas fa-keyboard' };
 
   el.innerHTML = log.map((e, i) => {
-    const t    = new Date(e.ts).toLocaleString('pt-BR');
-    const a    = e.analise || {};
-    const fc   = fmtColors[e.formato] || '#F8FAFC;color:#6B7A8F';
-    const raw  = e.raw || '';
-    const prev = raw.length > 90 ? raw.substring(0, 87) + '...' : raw;
+    const t   = new Date(e.ts).toLocaleString('pt-BR');
+    const a   = e.analise || {};
+    const ico = origemIcon[e.origem] || 'fas fa-circle';
+    const raw = e.raw || '';
+    const prev = raw.length > 100 ? raw.substring(0, 97) + '...' : raw;
 
-    let extra = '';
-    if (a.codigoSelo && a.codigoSelo !== raw) {
-      extra = `<div class="log-extract"><i class="fas fa-tag"></i> Código: ${escHtml(a.codigoSelo)}</div>`;
-    }
-    if (a.uuid) {
-      extra = `<div class="log-extract"><i class="fas fa-fingerprint"></i> UUID: ${escHtml(a.uuid)}</div>`;
-    }
+    let highlight = '';
+    if (a.serieCedula) highlight = `<div class="log-highlight"><i class="fas fa-tag"></i> Série: ${escHtml(a.serieCedula)}</div>`;
+    else if (a.codigoBCB) highlight = `<div class="log-highlight"><i class="fas fa-hashtag"></i> Cód. BCB: ${escHtml(a.codigoBCB)}</div>`;
+    else if (a.ean)       highlight = `<div class="log-highlight"><i class="fas fa-barcode"></i> EAN: ${escHtml(a.ean)}</div>`;
 
-    return `<div class="log-item">
+    const fmtStyle = {
+      QR_CODE:'background:#E8F0FB;color:#1a3b5d', DATA_MATRIX:'background:#EDE9FE;color:#5b21b6',
+      CODE_128:'background:#FEF3C7;color:#92400e', CODE_39:'background:#FFF7ED;color:#c2410c',
+      AZTEC:'background:#ECFDF5;color:#065f46', PDF_417:'background:#EFF6FF;color:#1d4ed8',
+      EAN_13:'background:#F0FDF4;color:#166534', ITF:'background:#F0FDF4;color:#166534',
+      MANUAL_INPUT:'background:#F8FAFC;color:#6B7A8F'
+    }[e.formato] || 'background:#F8FAFC;color:#6B7A8F';
+
+    return `<div class="log-row">
       <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
-        <span class="log-fmt" style="background:#${fc};">${e.formato}</span>
+        <span style="padding:2px 8px;border-radius:20px;font-size:.62rem;font-weight:700;${fmtStyle}">${e.formato}</span>
+        <i class="${ico}" style="font-size:.7rem;color:var(--muted);"></i>
         <span class="log-ts">${t}</span>
-        <span style="margin-left:auto;font-size:.63rem;color:var(--muted);">${a.comprimento||0}c</span>
+        <span style="margin-left:auto;font-size:.62rem;color:var(--muted);">${a.comprimento||0}c</span>
         <button class="btn-copy" onclick="copiarEntrada(${i})"><i class="fas fa-copy"></i></button>
       </div>
       <div class="log-raw">${escHtml(prev)}</div>
-      ${extra}
-      ${a.tipo ? `<div style="font-size:.67rem;color:var(--muted);">tipo: ${a.tipo} · padrões: ${(a.padroes||[]).join(', ')||'nenhum'}</div>` : ''}
+      ${highlight}
+      <div class="log-meta">tipo: ${a.tipo||'?'} · padrões: ${(a.padroes||[]).join(', ')||'nenhum'}</div>
     </div>`;
   }).join('');
 }
 
-function salvarLog()   { localStorage.setItem('inmetro_diag_log', JSON.stringify(log)); }
-function limparLog()   {
+function salvarLog()       { localStorage.setItem('bcb_scanner_log', JSON.stringify(log)); }
+function atualizarBadgeLog(){ document.getElementById('logBadge').textContent = log.length; document.getElementById('logTotal').textContent = log.length; }
+function limparLog()       {
   if (!confirm('Limpar todo o log?')) return;
-  log = []; salvarLog();
-  document.getElementById('logBadge').textContent = '0';
-  renderLog();
+  log = []; salvarLog(); atualizarBadgeLog(); renderLog();
   notif('Log limpo', 'success');
 }
-function exportarLog() {
+function exportarLog()     {
   if (!log.length) { notif('Log vazio', 'warning'); return; }
-  const json = JSON.stringify(log, null, 2);
-  const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+  baixar(JSON.stringify(log, null, 2), 'bcb_cedulas_' + hoje() + '.json', 'application/json');
+  notif('Exportado: ' + log.length + ' leituras', 'success');
+}
+function exportarTxt()     {
+  if (!log.length) { notif('Log vazio', 'warning'); return; }
+  const txt = log.map(e =>
+    `[${new Date(e.ts).toLocaleString('pt-BR')}] FMT:${e.formato} ORIGEM:${e.origem}\n` +
+    `RAW: ${e.raw}\n` +
+    `SERIE: ${e.analise?.serieCedula||'-'} | BCB: ${e.analise?.codigoBCB||'-'} | TIPO: ${e.analise?.tipo||'-'}\n` +
+    `PADROES: ${(e.analise?.padroes||[]).join(', ')||'nenhum'}\n` +
+    '─'.repeat(60)
+  ).join('\n');
+  baixar(txt, 'bcb_cedulas_' + hoje() + '.txt', 'text/plain;charset=utf-8');
+  notif('Exportado TXT', 'success');
+}
+function hoje()   { return new Date().toISOString().slice(0,10); }
+function baixar(content, filename, type) {
+  const blob = new Blob([content], { type });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href     = url;
-  a.download = 'inmetro_selos_' + new Date().toISOString().slice(0, 10) + '.json';
-  a.click();
+  a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
-  notif('Log exportado (' + log.length + ' leituras)', 'success');
 }
 
-function copiarUltimo() {
-  if (!ultimoRaw) return;
-  navigator.clipboard?.writeText(ultimoRaw)
-    .then(()  => notif('Copiado!', 'success'))
-    .catch(()  => notif('Erro ao copiar', 'warning'));
-}
-function copiarEntrada(i) {
-  const raw = log[i]?.raw || '';
-  navigator.clipboard?.writeText(raw)
-    .then(()  => notif('Copiado!', 'success'))
-    .catch(()  => notif('Erro ao copiar', 'warning'));
+function copiarUltimo()      { copiarTxt(ultimoRaw); }
+function copiarUltimoFoto()  { copiarTxt(ultimoFoto); }
+function copiarEntrada(i)    { copiarTxt(log[i]?.raw || ''); }
+function copiarTxt(txt)      {
+  navigator.clipboard?.writeText(txt)
+    .then(() => notif('Copiado!', 'success'))
+    .catch(() => notif('Erro ao copiar', 'warning'));
 }
 
-// ═══════════ UTILS ═══════════
+// ═══════════════════ UTILS ═══════════════════
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -818,26 +1053,22 @@ function notif(msg, tipo) {
   const n   = document.getElementById('notif');
   const ico = document.getElementById('notifIco');
   document.getElementById('notifMsg').textContent = msg;
-  ico.className = tipo === 'success' ? 'fas fa-check-circle'
-                : tipo === 'error'   ? 'fas fa-times-circle'
-                : tipo === 'warning' ? 'fas fa-exclamation-triangle'
-                :                      'fas fa-info-circle';
-  ico.style.color = tipo === 'success' ? '#1a7c3e' : tipo === 'error' ? '#c11f2f' : tipo === 'warning' ? '#b45b0a' : '#1E3B5A';
+  const map = { success:['fas fa-check-circle','#1a7c3e'], error:['fas fa-times-circle','#c11f2f'],
+                warning:['fas fa-exclamation-triangle','#b45b0a'], info:['fas fa-info-circle','#1E3B5A'] };
+  const [cls, color] = map[tipo] || map.info;
+  ico.className = cls; ico.style.color = color;
   n.style.display = 'flex';
-  ntTimer = setTimeout(() => { n.style.display = 'none'; }, 3200);
+  ntTimer = setTimeout(() => { n.style.display = 'none'; }, 3400);
 }
 
-// ── Formato chips ── toggle on/off
-document.querySelectorAll('#fmtList input[type="checkbox"]').forEach(cb => {
-  cb.addEventListener('change', () => {
-    const lbl = cb.closest('.fmt-chip');
-    if (cb.checked) lbl.classList.add('on'); else lbl.classList.remove('on');
-  });
-});
+// Hidden div for Html5Qrcode temp reader
+const tmp = document.createElement('div');
+tmp.id = '_tmp_reader_hidden';
+tmp.style.cssText = 'display:none;position:absolute;width:1px;height:1px;overflow:hidden;';
+document.body.appendChild(tmp);
 
 // Init
-document.getElementById('logBadge').textContent = log.length;
-document.getElementById('logTotal').textContent  = log.length;
+atualizarBadgeLog();
 </script>
 </body>
 </html>
